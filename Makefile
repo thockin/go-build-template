@@ -50,20 +50,7 @@ IMAGE := $(REGISTRY)/$(BIN)-$(ARCH)
 
 BUILD_IMAGE ?= golang:1.7-alpine
 
-VERSION := 
-TAG := $(shell git describe --abbrev=0 --tags HEAD 2>/dev/null)
-COMMIT := $(shell git rev-parse HEAD)
-ifeq ($(TAG),)
-    VERSION := unknown-$(COMMIT)
-else
-    ifeq ($(COMMIT), $(shell git rev-list -n1 $(TAG)))
-        VERSION := $(TAG)
-    else
-        VERSION := $(TAG)-$(COMMIT)
-    endif
-endif
-DIRTY := $(shell test -z "$$(git diff --shortstat 2>/dev/null)" || echo -dirty)
-VERSION := $(VERSION)$(DIRTY)
+VERSION := $(shell git describe --always --dirty)
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
