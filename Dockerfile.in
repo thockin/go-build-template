@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.4
+FROM ARG_FROM
 
 MAINTAINER Tim Hockin <thockin@google.com>
 
-ARG ARCH
-
-ADD bin/${ARCH}/myapp /myapp
+ADD bin/ARG_ARCH/ARG_BIN /ARG_BIN
 
 USER nobody:nobody
-ENTRYPOINT ["/myapp"]
+ENTRYPOINT ["/ARG_BIN"]
