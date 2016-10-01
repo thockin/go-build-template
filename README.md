@@ -15,6 +15,7 @@ Makefile:
    - change `PKG` to the Go import path of this repo
    - change `REGISTRY` to the Docker registry you want to use
    - maybe change `SRC_DIRS` if you use some other layout
+   - choose a strategy for `VERSION` values - git tags or manual
 
 Dockerfile.in:
    - change the `MAINTAINER` to you

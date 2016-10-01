@@ -24,6 +24,12 @@ REGISTRY ?= thockin
 # Which architecture to build - see $(ALL_ARCH) for options.
 ARCH ?= amd64
 
+# This version-strategy uses git tags to set the version string
+VERSION := $(shell git describe --always --dirty)
+#
+# This version-strategy uses a manual value to set the version string
+#VERSION := 1.2.3
+
 ###
 ### These variables should not need tweaking.
 ###
@@ -49,8 +55,6 @@ endif
 IMAGE := $(REGISTRY)/$(BIN)-$(ARCH)
 
 BUILD_IMAGE ?= golang:1.7-alpine
-
-VERSION := $(shell git describe --always --dirty)
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
