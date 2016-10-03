@@ -86,7 +86,7 @@ bin/$(ARCH)/$(BIN): build-dirs
 	    -v $$(pwd)/.go:/go                                                 \
 	    -v $$(pwd):/go/src/$(PKG)                                          \
 	    -v $$(pwd)/bin/$(ARCH):/go/bin                                     \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin/$$(go env GOOS)_$(ARCH)             \
+	    -v $$(pwd)/bin/$(ARCH):/go/bin/linux_$(ARCH)                       \
 	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static  \
 	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
