@@ -25,7 +25,6 @@ Additional images
   `images/` directory. See [`images/Makefile`](images/Makefile) for more
   details.
 
-
 ## Building
 
 Run `make` or `make build` to compile your app.  This will use a Docker image to
