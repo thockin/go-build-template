@@ -1,5 +1,5 @@
 /bin
 /.go
-/.push-*
-/.container-*
-/.dockerfile-*
+/.*-push
+/.*-container
+/.*-dockerfile

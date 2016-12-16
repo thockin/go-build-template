@@ -11,29 +11,30 @@ This has only been tested on Linux, and depends on Docker to build.
 To use this, simply copy these files and make the following changes:
 
 Makefile:
-   - change `BIN` to your binary name
+   - change `BINARIES` to list your binaries
    - change `PKG` to the Go import path of this repo
    - change `REGISTRY` to the Docker registry you want to use
-   - maybe change `SRC_DIRS` if you use some other layout
    - choose a strategy for `VERSION` values - git tags or manual
 
-Dockerfile.in:
+Dockerfile.BINARY:
    - change the `MAINTAINER` to you
    - maybe change or remove the `USER` if you need
 
 ## Building
 
-Run `make` or `make build` to compile your app.  This will use a Docker image
-to build your app, with the current directory volume-mounted into place.  This
-will store incremental state for the fastest possible build.  Run `make
-all-build` to build for all architectures.
+Run `make` or `make build` to compile your app.  This will use a Docker image to
+build your app, with the current directory volume-mounted into place.  This will
+store incremental state for the fastest possible build.  Run `make all-build` to
+build for all architectures.
 
-Run `make container` to build the container image.  It will calculate the image
-tag based on the most recent git tag, and whether the repo is "dirty" since
-that tag (see `make version`).  Run `make all-container` to build containers
-for all architectures.
+Run `make containers` to build the container image.  It will calculate the image
+tag based on the most recent git tag, and whether the repo is "dirty" since that
+tag (see `make version`).  Run `make all-containers` to build containers for all
+architectures.
 
-Run `make push` to push the container image to `REGISTRY`.  Run `make all-push`
+Run `make push` to push the container images to `REGISTRY`.  Run `make all-push`
 to push the container images for all architectures.
 
 Run `make clean` to clean up.
+
+See `make help` for more details.
