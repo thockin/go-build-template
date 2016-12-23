@@ -1,0 +1,4 @@
+FROM alpine
+MAINTAINER Bowei Du <bowei@google.com>
+
+COPY _output/__ARCH__/hello /hello

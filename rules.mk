@@ -15,7 +15,17 @@
 #
 # These build rules should not need to be modified.
 #
-SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
+
+# Variables exported to submake
+export ARCH
+export CONTAINER_PREFIX
+export IMAGES
+export REGISTRY
+export VERBOSE
+export VERSION
+
+# directories which hold app source (not vendored)
+SRC_DIRS := cmd pkg
 
 ALL_ARCH := amd64 arm arm64 ppc64le
 # Set default base image dynamically for each arch
@@ -35,7 +45,7 @@ endif
 # These rules MUST be expanded at reference time (hence '=') as BINARY
 # is dynamically scoped.
 CONTAINER_NAME  = $(REGISTRY)/$(CONTAINER_PREFIX)-$(BINARY)-$(ARCH)
-BUILDSTAMP_NAME = $(subst /,_,$(CONTAINER_NAME))
+BUILDSTAMP_NAME = $(subst /,_,$(CONTAINER_NAME))_$(VERSION)
 
 GO_BINARIES := $(addprefix bin/$(ARCH)/,$(BINARIES))
 CONTAINER_BUILDSTAMPS := $(foreach BINARY,$(BINARIES),.$(BUILDSTAMP_NAME)-container)
@@ -71,7 +81,7 @@ all-containers: $(addprefix containers-, $(ALL_ARCH))
 all-push: $(addprefix push-, $(ALL_ARCH))
 
 .PHONY: build
-build: $(GO_BINARIES)
+build: $(GO_BINARIES) images-build
 
 
 # Rule for all bin/$(ARCH)/bin/$(BINARY)
@@ -124,12 +134,12 @@ endef
 $(foreach BINARY,$(BINARIES),$(eval $(CONTAINER_RULE)))
 
 .PHONY: containers
-containers: $(CONTAINER_BUILDSTAMPS)
+containers: $(CONTAINER_BUILDSTAMPS) images-containers
 
 
 # Rules for pushing
 .PHONY: push
-push: $(PUSH_BUILDSTAMPS)
+push: $(PUSH_BUILDSTAMPS) images-push
 
 .%-push: .%-container
 	@echo "pushing  :" $$(head -n 1 $<)
@@ -143,7 +153,7 @@ $(foreach BINARY,$(BINARIES),$(eval $(PUSH_RULE)))
 
 
 # Rule for `test`
-.PHONY: test
+.PHONY: test images-test
 test: build-dirs
 	@docker run                                                            \
 	    --sig-proxy=true                                                   \
@@ -158,6 +168,27 @@ test: build-dirs
 	        ./build/test.sh $(SRC_DIRS)                                    \
 	    "
 
+# Hook in images build
+.PHONY: images-build
+images-build:
+	@$(MAKE) -C images build
+
+.PHONY: images-containers
+images-containers:
+	@$(MAKE) -C images containers
+
+.PHONY: images-push
+images-push:
+	@$(MAKE) -C images push
+
+.PHONY: images-clean
+images-test:
+	@$(MAKE) -C images test
+
+.PHONY: images-clean
+images-clean:
+	@$(MAKE) -C images clean
+
 # Miscellaneous rules
 .PHONY: version
 version:
@@ -169,7 +200,7 @@ build-dirs:
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
 
 .PHONY: clean
-clean: container-clean bin-clean
+clean: container-clean bin-clean images-clean
 
 .PHONY: container-clean
 container-clean:

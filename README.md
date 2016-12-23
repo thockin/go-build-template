@@ -11,14 +11,20 @@ This has only been tested on Linux, and depends on Docker to build.
 To use this, simply copy these files and make the following changes:
 
 Makefile:
-   - change `BINARIES` to list your binaries
-   - change `PKG` to the Go import path of this repo
-   - change `REGISTRY` to the Docker registry you want to use
-   - choose a strategy for `VERSION` values - git tags or manual
+- change `BINARIES` to list your binaries
+- change `PKG` to the Go import path of this repo
+- change `REGISTRY` to the Docker registry you want to use
+- choose a strategy for `VERSION` values - git tags or manual
 
 Dockerfile.BINARY:
-   - change the `MAINTAINER` to you
-   - maybe change or remove the `USER` if you need
+- change the `MAINTAINER` to you
+- maybe change or remove the `USER` if you need
+
+Additional images
+- Additional images to be build should be listed in `IMAGES` and placed in the
+  `images/` directory. See [`images/Makefile`](images/Makefile) for more
+  details.
+
 
 ## Building
 

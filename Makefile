@@ -22,6 +22,9 @@ PKG := github.com/bowei/go-build-template
 # List of binaries to build. You must have a matching Dockerfile.BINARY
 # for each BINARY.
 BINARIES := app1 app2
+# List of additional images to build. These are located in the images/
+# directory.
+IMAGES := hello
 
 # Registry to push to.
 REGISTRY ?= my-registry
