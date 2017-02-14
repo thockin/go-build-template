@@ -97,7 +97,7 @@ bin/$(ARCH)/$(BIN): build-dirs
 	        ./build/build.sh                                               \
 	    "
 
-DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
+DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
 
 container: .container-$(DOTFILE_IMAGE) container-name
 .container-$(DOTFILE_IMAGE): bin/$(ARCH)/$(BIN) Dockerfile.in
@@ -114,7 +114,11 @@ container-name:
 
 push: .push-$(DOTFILE_IMAGE) push-name
 .push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
-	@gcloud docker push $(IMAGE):$(VERSION)
+ifeq ($(findstring gcr.io,$(REGISTRY)),gcr.io)
+	@gcloud docker -- push $(IMAGE):$(VERSION)
+else
+	@docker push $(IMAGE):$(VERSION)
+endif
 	@docker images -q $(IMAGE):$(VERSION) > $@
 
 push-name:
