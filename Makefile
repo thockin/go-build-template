@@ -80,22 +80,22 @@ build: bin/$(ARCH)/$(BIN)
 
 bin/$(ARCH)/$(BIN): build-dirs
 	@echo "building: $@"
-	@docker run                                                            \
-	    -ti                                                                \
-	    --rm                                                               \
-	    -u $$(id -u):$$(id -g)                                             \
-	    -v $$(pwd)/.go:/go                                                 \
-	    -v $$(pwd):/go/src/$(PKG)                                          \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin                                     \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin/linux_$(ARCH)                       \
-	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static  \
-	    -w /go/src/$(PKG)                                                  \
-	    $(BUILD_IMAGE)                                                     \
-	    /bin/sh -c "                                                       \
-	        ARCH=$(ARCH)                                                   \
-	        VERSION=$(VERSION)                                             \
-	        PKG=$(PKG)                                                     \
-	        ./build/build.sh                                               \
+	@docker run                                                             \
+	    -ti                                                                 \
+	    --rm                                                                \
+	    -u $$(id -u):$$(id -g)                                              \
+	    -v "$$(pwd)/.go:/go"                                                \
+	    -v "$$(pwd):/go/src/$(PKG)"                                         \
+	    -v "$$(pwd)/bin/$(ARCH):/go/bin"                                    \
+	    -v "$$(pwd)/bin/$(ARCH):/go/bin/$$(go env GOOS)_$(ARCH)"            \
+	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static" \
+	    -w /go/src/$(PKG)                                                   \
+	    $(BUILD_IMAGE)                                                      \
+	    /bin/sh -c "                                                        \
+	        ARCH=$(ARCH)                                                    \
+	        VERSION=$(VERSION)                                              \
+	        PKG=$(PKG)                                                      \
+	        ./build/build.sh                                                \
 	    "
 
 DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
@@ -129,18 +129,19 @@ version:
 	@echo $(VERSION)
 
 test: build-dirs
-	@docker run                                                            \
-	    -ti                                                                \
-	    --rm                                                               \
-	    -u $$(id -u):$$(id -g)                                             \
-	    -v $$(pwd)/.go:/go                                                 \
-	    -v $$(pwd):/go/src/$(PKG)                                          \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin                                     \
-	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static  \
-	    -w /go/src/$(PKG)                                                  \
-	    $(BUILD_IMAGE)                                                     \
-	    /bin/sh -c "                                                       \
-	        ./build/test.sh $(SRC_DIRS)                                    \
+	@docker run                                                             \
+	    -ti                                                                 \
+	    --rm                                                                \
+	    -u $$(id -u):$$(id -g)                                              \
+	    -v "$$(pwd)/.go:/go"                                                \
+	    -v "$$(pwd):/go/src/$(PKG)"                                         \
+	    -v "$$(pwd)/bin/$(ARCH):/go/bin"                                    \
+	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static" \
+	    -w /go/src/$(PKG)                                                   \
+	    $(BUILD_IMAGE)                                                      \
+	    /bin/sh -c "                                                        \
+	        ./build/test.sh $(SRC_DIRS)                                     \
+
 	    "
 
 build-dirs:
