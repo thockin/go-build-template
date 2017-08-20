@@ -25,7 +25,7 @@ REGISTRY ?= thockin
 ARCH ?= amd64
 
 # This version-strategy uses git tags to set the version string
-VERSION := $(shell git describe --always --dirty)
+VERSION := $(shell git describe --tags --always --dirty)
 #
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
@@ -82,6 +82,7 @@ bin/$(ARCH)/$(BIN): build-dirs
 	@echo "building: $@"
 	@docker run                                                             \
 	    -ti                                                                 \
+ 	    --rm                                                                \
 	    -u $$(id -u):$$(id -g)                                              \
 	    -v "$$(pwd)/.go:/go"                                                \
 	    -v "$$(pwd):/go/src/$(PKG)"                                         \
@@ -97,7 +98,7 @@ bin/$(ARCH)/$(BIN): build-dirs
 	        ./build/build.sh                                                \
 	    "
 
-DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
+DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
 
 container: .container-$(DOTFILE_IMAGE) container-name
 .container-$(DOTFILE_IMAGE): bin/$(ARCH)/$(BIN) Dockerfile.in
@@ -114,7 +115,11 @@ container-name:
 
 push: .push-$(DOTFILE_IMAGE) push-name
 .push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
-	@gcloud docker push $(IMAGE):$(VERSION)
+ifeq ($(findstring gcr.io,$(REGISTRY)),gcr.io)
+	@gcloud docker -- push $(IMAGE):$(VERSION)
+else
+	@docker push $(IMAGE):$(VERSION)
+endif
 	@docker images -q $(IMAGE):$(VERSION) > $@
 
 push-name:
@@ -126,6 +131,7 @@ version:
 test: build-dirs
 	@docker run                                                             \
 	    -ti                                                                 \
+      --rm                                                                \
 	    -u $$(id -u):$$(id -g)                                              \
 	    -v "$$(pwd)/.go:/go"                                                \
 	    -v "$$(pwd):/go/src/$(PKG)"                                         \
@@ -135,6 +141,7 @@ test: build-dirs
 	    $(BUILD_IMAGE)                                                      \
 	    /bin/sh -c "                                                        \
 	        ./build/test.sh $(SRC_DIRS)                                     \
+
 	    "
 
 build-dirs:
