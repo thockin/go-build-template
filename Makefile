@@ -12,14 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The binary to build (just the basename).
-BIN := myapp
-
-# This repo's root import path (under GOPATH).
-PKG := github.com/thockin/go-build-template
-
-# Where to push the docker image.
-REGISTRY ?= thockin
+# The values set in the Makefile.include
+include Makefile.include
 
 # Which architecture to build - see $(ALL_ARCH) for options.
 ARCH ?= amd64
