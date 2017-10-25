@@ -12,6 +12,7 @@ To use this, simply copy these files and make the following changes:
 
 Makefile:
    - change `BIN` to your binary name
+   - rename `cmd/myapp` to `cmd/$BIN`
    - change `PKG` to the Go import path of this repo
    - change `REGISTRY` to the Docker registry you want to use
    - maybe change `SRC_DIRS` if you use some other layout
