@@ -157,7 +157,6 @@ test: build-dirs
 	    $(BUILD_IMAGE)                                                      \
 	    /bin/sh -c "                                                        \
 	        ./build/test.sh $(SRC_DIRS)                                     \
-
 	    "
 
 build-dirs:
