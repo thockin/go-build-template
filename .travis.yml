@@ -2,7 +2,7 @@ language: go
 services:
   - docker
 script:
-- make | awk '{print $1}' | grep clean
+- make help | awk '{print $1}' | grep clean
 - make build
 - test -f bin/amd64/myapp
 - make container
