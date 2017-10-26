@@ -59,7 +59,8 @@ BUILD_IMAGE ?= golang:1.9-alpine
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
 # If you want to build AND push all containers, see the 'all-push' rule.
-all: build ## executes the build target
+all: # @HELP executes the build target
+all: build
 
 build-%:
 	@$(MAKE) --no-print-directory ARCH=$* build
@@ -70,13 +71,17 @@ container-%:
 push-%:
 	@$(MAKE) --no-print-directory ARCH=$* push
 
-all-build: $(addprefix build-, $(ALL_ARCH)) ## builds binaries for all architectures
+all-build: # @HELP builds binaries for all architectures
+all-build: $(addprefix build-, $(ALL_ARCH)) 
 
-all-container: $(addprefix container-, $(ALL_ARCH))  ## builds containers for all architectures 
+all-container: # @HELP builds containers for all architectures 
+all-container: $(addprefix container-, $(ALL_ARCH))
 
-all-push: $(addprefix push-, $(ALL_ARCH)) ## pushes containers to registry for all architectures
+all-push: # @HELP pushes containers to defined registry for all architectures
+all-push: $(addprefix push-, $(ALL_ARCH))
 
-build: bin/$(ARCH)/$(BIN) ## builds binary for preferred architecture
+build: # @HELP builds binary for preferred architecture
+build: bin/$(ARCH)/$(BIN) 
 
 bin/$(ARCH)/$(BIN): build-dirs
 	@echo "building: $@"
@@ -99,7 +104,8 @@ bin/$(ARCH)/$(BIN): build-dirs
 	    "
 
 # Example: make shell CMD="-c 'date > datefile'"
-shell: build-dirs  ## launches a shell in the containerized build environment
+shell: # @HELP launches a shell in the containerized build environment
+shell: build-dirs 
 	@echo "launching a shell in the containerized build environment"
 	@docker run                                                             \
 	    -ti                                                                 \
@@ -116,7 +122,8 @@ shell: build-dirs  ## launches a shell in the containerized build environment
 
 DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
 
-container: .container-$(DOTFILE_IMAGE) container-name  ## builds container for the preferred architecture
+container: # @HELP builds container for the preferred architecture
+container: .container-$(DOTFILE_IMAGE) container-name
 .container-$(DOTFILE_IMAGE): bin/$(ARCH)/$(BIN) Dockerfile.in
 	@sed \
 	    -e 's|ARG_BIN|$(BIN)|g' \
@@ -126,10 +133,12 @@ container: .container-$(DOTFILE_IMAGE) container-name  ## builds container for t
 	@docker build -t $(IMAGE):$(VERSION) -f .dockerfile-$(ARCH) .
 	@docker images -q $(IMAGE):$(VERSION) > $@
 
-container-name:  ## outputs container name
+container-name: # @HELP outputs container name
+container-name:
 	@echo "container: $(IMAGE):$(VERSION)"
 
-push: .push-$(DOTFILE_IMAGE) push-name  ## pushes preferred image to the defined registry
+push: # @HELP pushes preferred image to the defined registry
+push: .push-$(DOTFILE_IMAGE) push-name
 .push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
 ifeq ($(findstring gcr.io,$(REGISTRY)),gcr.io)
 	@gcloud docker -- push $(IMAGE):$(VERSION)
@@ -141,10 +150,12 @@ endif
 push-name:
 	@echo "pushed: $(IMAGE):$(VERSION)"
 
-version:  ## outputs version
+version: # @HELP outputs version
+version:
 	@echo $(VERSION)
 
-test: build-dirs ## executes the test.sh script located in the build directory
+test: # @HELP executes the test.sh script located in the build directory
+test: build-dirs 
 	@docker run                                                             \
 	    -ti                                                                 \
 	    --rm                                                                \
@@ -163,7 +174,8 @@ build-dirs:
 	@mkdir -p bin/$(ARCH)
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
 
-clean: container-clean bin-clean  ## cleans the repository's temporary files
+clean: # @HELP cleans the repository's temporary files
+clean: container-clean bin-clean 
 
 container-clean:
 	rm -rf .container-* .dockerfile-* .push-*
@@ -172,6 +184,9 @@ bin-clean:
 	rm -rf .go bin
 
 help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
-.DEFAULT_GOAL := help
+	@grep -E '^[a-zA-Z_-]+:.*?# @HELP .*$$' $(MAKEFILE_LIST) \
+    | sort \
+    | awk ' \
+        BEGIN {FS = ":.*?# @HELP "}; \
+        {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}; \
+    '
