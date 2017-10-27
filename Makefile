@@ -184,9 +184,9 @@ bin-clean:
 	rm -rf .go bin
 
 help:
-	@grep -E '^[a-zA-Z_-]+:.*?# @HELP .*$$' $(MAKEFILE_LIST) \
+	@grep -E '^.*: *# *@HELP' $(MAKEFILE_LIST) \
     | sort \
     | awk ' \
-        BEGIN {FS = ":.*?# @HELP "}; \
+        BEGIN {FS = ": *# *@HELP"}; \
         {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}; \
     '
