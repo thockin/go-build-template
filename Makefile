@@ -63,8 +63,8 @@ BUILD_IMAGE ?= golang:1.9-alpine
 # If you want to build AND push all containers, see the 'all-push' rule.
 all: build
 
-$(addprefix build-, $(ALL_PLATFORMS)):
-	@$(MAKE) --no-print-directory ARCH=$(word 3,$(subst -, ,$@)) OS=$(word 2,$(subst -, ,$@)) build
+build-%:
+	@$(MAKE) --no-print-directory ARCH=$(word 2,$(subst -, ,$*)) OS=$(word 1,$(subst -, ,$*)) build
 
 container-%:
 	@$(MAKE) --no-print-directory ARCH=$* container
