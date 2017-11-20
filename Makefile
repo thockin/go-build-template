@@ -21,7 +21,7 @@ PKG := github.com/thockin/go-build-template
 # Where to push the docker image.
 REGISTRY ?= thockin
 
-# Which architecture to build - see $(ALL_ARCH) for options.
+# Which architecture to build - see $(BUILD_PLATFORMS) for options.
 ARCH ?= amd64
 OS ?= linux
 
@@ -37,8 +37,9 @@ VERSION := $(shell git describe --tags --always --dirty)
 
 SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 
-ALL_ARCH := amd64 arm arm64 ppc64le
-ALL_PLATFORMS := linux-amd64 freebsd-amd64 freebsd-386
+# $(OS)-$(ARCH) pairs to build binaries and containers for
+BUILD_PLATFORMS := linux-amd64 linux-arm linux-arm64 linux-ppc64le freebsd-amd64 freebsd-386
+CONTAINER_PLATFORMS := linux-amd64 linux-arm64 linux-ppc64le # must be a subset of BUILD_PLATFORMS
 
 # Set default base image dynamically for each arch
 ifeq ($(ARCH),amd64)
@@ -67,22 +68,22 @@ build-%:
 	@$(MAKE) --no-print-directory ARCH=$(word 2,$(subst -, ,$*)) OS=$(word 1,$(subst -, ,$*)) build
 
 container-%:
-	@$(MAKE) --no-print-directory ARCH=$* container
+	@$(MAKE) --no-print-directory ARCH=$(word 2,$(subst -, ,$*)) OS=$(word 1,$(subst -, ,$*)) container
 
 push-%:
-	@$(MAKE) --no-print-directory ARCH=$* push
+	@$(MAKE) --no-print-directory ARCH=$(word 2,$(subst -, ,$*)) OS=$(word 1,$(subst -, ,$*)) push
 
-all-build: $(addprefix build-, $(ALL_PLATFORMS))
+all-build: $(addprefix build-, $(BUILD_PLATFORMS))
 
-all-container: $(addprefix container-, $(ALL_ARCH))
+all-container: $(addprefix container-, $(CONTAINER_PLATFORMS))
 
-all-push: $(addprefix push-, $(ALL_ARCH))
+all-push: $(addprefix push-, $(CONTAINER_PLATFORMS))
 
 build: bin/$(OS)-$(ARCH)/$(BIN)
 
 bin/$(OS)-$(ARCH)/$(BIN): build-dirs
-ifeq ($(filter $(OS)-$(ARCH),$(ALL_PLATFORMS)),)
-	$(error unsupported platform $(OS)-$(ARCH) not in $(ALL_PLATFORMS))
+ifeq ($(filter $(OS)-$(ARCH),$(BUILD_PLATFORMS)),)
+	$(error unsupported build platform $(OS)-$(ARCH) not in $(BUILD_PLATFORMS))
 endif
 	@echo "building: $@"
 	@docker run                                                                   \
@@ -123,6 +124,9 @@ shell: build-dirs
 DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
 
 container: .container-$(DOTFILE_IMAGE) container-name
+ifeq ($(filter $(OS)-$(ARCH),$(CONTAINER_PLATFORMS)),)
+	$(error unsupported container platform $(OS)-$(ARCH) not in $(CONTAINER_PLATFORMS))
+endif
 .container-$(DOTFILE_IMAGE): bin/$(OS)-$(ARCH)/$(BIN) Dockerfile.in
 	@sed \
 	    -e 's|ARG_BIN|$(BIN)|g' \
