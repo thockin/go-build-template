@@ -54,7 +54,7 @@ endif
 
 IMAGE := $(REGISTRY)/$(BIN)-$(ARCH)
 
-BUILD_IMAGE ?= golang:1.9-alpine
+BUILD_IMAGE ?= golang:1.10-alpine
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
@@ -89,6 +89,7 @@ bin/$(ARCH)/$(BIN): build-dirs
 	    -v "$$(pwd)/bin/$(ARCH):/go/bin"                                    \
 	    -v "$$(pwd)/bin/$(ARCH):/go/bin/$$(go env GOOS)_$(ARCH)"            \
 	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static" \
+	    -v "$$(pwd)/.go/cache:/.cache"                                      \
 	    -w /go/src/$(PKG)                                                   \
 	    $(BUILD_IMAGE)                                                      \
 	    /bin/sh -c "                                                        \
@@ -110,6 +111,7 @@ shell: build-dirs
 	    -v "$$(pwd)/bin/$(ARCH):/go/bin"                                    \
 	    -v "$$(pwd)/bin/$(ARCH):/go/bin/$$(go env GOOS)_$(ARCH)"            \
 	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static" \
+	    -v "$$(pwd)/.go/cache:/.cache"                                      \
 	    -w /go/src/$(PKG)                                                   \
 	    $(BUILD_IMAGE)                                                      \
 	    /bin/sh $(CMD)
@@ -153,6 +155,7 @@ test: build-dirs
 	    -v "$$(pwd):/go/src/$(PKG)"                                         \
 	    -v "$$(pwd)/bin/$(ARCH):/go/bin"                                    \
 	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static" \
+	    -v "$$(pwd)/.go/cache:/.cache"                                      \
 	    -w /go/src/$(PKG)                                                   \
 	    $(BUILD_IMAGE)                                                      \
 	    /bin/sh -c "                                                        \
@@ -161,7 +164,7 @@ test: build-dirs
 
 build-dirs:
 	@mkdir -p bin/$(ARCH)
-	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
+	@mkdir -p .go .go/cache .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
 
 clean: container-clean bin-clean
 
