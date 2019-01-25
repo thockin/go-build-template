@@ -21,8 +21,11 @@ PKG := github.com/thockin/go-build-template
 # Where to push the docker image.
 REGISTRY ?= thockin
 
-# Which architecture to build - see $(ALL_ARCH) for options.
-ARCH ?= amd64
+# Which platform to build - see $(ALL_PLATFORMS) for options.
+PLATFORM ?= linux/amd64
+
+OS := $(firstword $(subst /, ,$(PLATFORM)))
+ARCH := $(lastword $(subst /, ,$(PLATFORM)))
 
 # This version-strategy uses git tags to set the version string
 VERSION := $(shell git describe --tags --always --dirty)
@@ -36,11 +39,12 @@ VERSION := $(shell git describe --tags --always --dirty)
 
 SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 
-ALL_ARCH := amd64 arm arm64 ppc64le
+ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le
 
 # Set default base image dynamically for each arch
+# TODO: make these all consistent and tagged.
 ifeq ($(ARCH),amd64)
-    BASEIMAGE?=alpine
+    BASEIMAGE?=alpine:3.8
 endif
 ifeq ($(ARCH),arm)
     BASEIMAGE?=armel/busybox
@@ -52,9 +56,10 @@ ifeq ($(ARCH),ppc64le)
     BASEIMAGE?=ppc64le/busybox
 endif
 
-IMAGE := $(REGISTRY)/$(BIN)-$(ARCH)
+IMAGE := $(REGISTRY)/$(BIN)
+TAG := $(VERSION)__$(OS)_$(ARCH)
 
-BUILD_IMAGE ?= golang:1.10-alpine
+BUILD_IMAGE ?= golang:1.11-alpine
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
@@ -70,101 +75,129 @@ container-%:
 push-%:
 	@$(MAKE) --no-print-directory ARCH=$* push
 
-all-build: $(addprefix build-, $(ALL_ARCH))
+all-build: $(addprefix build-, $(ALL_PLATFORMS))
 
-all-container: $(addprefix container-, $(ALL_ARCH))
+all-container: $(addprefix container-, $(ALL_PLATFORMS))
 
-all-push: $(addprefix push-, $(ALL_ARCH))
+all-push: $(addprefix push-, $(ALL_PLATFORMS))
 
-build: bin/$(ARCH)/$(BIN)
+build: bin/$(OS)_$(ARCH)/$(BIN)
 
-bin/$(ARCH)/$(BIN): build-dirs
+# Directories that we need created to build/test.
+BUILD_DIRS := bin/$(OS)_$(ARCH)     \
+              .go/src/$(PKG)        \
+              .go/pkg               \
+              .go/bin               \
+              .go/std/$(OS)_$(ARCH) \
+              .go/cache
+
+# TODO: This is .PHONY because building Go code uses a compiler-internal DAG,
+# so we have to run the go tool.  Unfortunately, go always touches the binary
+# during `go install` even if it didn't change anything (as per md5sum).  This
+# makes make unhappy.  Better would be to run go, see that the result did not
+# change, and then bypass further processing.  Sadly not possible for now.
+.PHONY: bin/$(OS)_$(ARCH)/$(BIN)
+bin/$(OS)_$(ARCH)/$(BIN): $(BUILD_DIRS)
 	@echo "building: $@"
-	@docker run                                                             \
-	    -ti                                                                 \
-	    --rm                                                                \
-	    -u $$(id -u):$$(id -g)                                              \
-	    -v "$$(pwd)/.go:/go"                                                \
-	    -v "$$(pwd):/go/src/$(PKG)"                                         \
-	    -v "$$(pwd)/bin/$(ARCH):/go/bin"                                    \
-	    -v "$$(pwd)/bin/$(ARCH):/go/bin/$$(go env GOOS)_$(ARCH)"            \
-	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static" \
-	    -v "$$(pwd)/.go/cache:/.cache"                                      \
-	    -w /go/src/$(PKG)                                                   \
-	    $(BUILD_IMAGE)                                                      \
-	    /bin/sh -c "                                                        \
-	        ARCH=$(ARCH)                                                    \
-	        VERSION=$(VERSION)                                              \
-	        PKG=$(PKG)                                                      \
-	        ./build/build.sh                                                \
+	@docker run                                                                 \
+	    -i                                                                      \
+	    --rm                                                                    \
+	    -u $$(id -u):$$(id -g)                                                  \
+	    -v $$(pwd):/go/src/$(PKG)                                               \
+	    -v $$(pwd)/bin/$(OS)_$(ARCH):/go/bin                                    \
+	    -v $$(pwd)/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)                      \
+	    -v $$(pwd)/.go/std/$(OS)_$(ARCH):/usr/local/go/pkg/$(OS)_$(ARCH)_static \
+	    -v $$(pwd)/.go/cache:/.cache                                            \
+	    -w /go/src/$(PKG)                                                       \
+	    --env HTTP_PROXY=$(HTTP_PROXY)                                          \
+	    --env HTTPS_PROXY=$(HTTPS_PROXY)                                        \
+	    $(BUILD_IMAGE)                                                          \
+	    /bin/sh -c "                                                            \
+	        ARCH=$(ARCH)                                                        \
+	        OS=$(OS)                                                            \
+	        VERSION=$(VERSION)                                                  \
+	        PKG=$(PKG)                                                          \
+	        ./build/build.sh                                                    \
 	    "
 
 # Example: make shell CMD="-c 'date > datefile'"
-shell: build-dirs
+shell: $(BUILD_DIRS)
 	@echo "launching a shell in the containerized build environment"
-	@docker run                                                             \
-	    -ti                                                                 \
-	    --rm                                                                \
-	    -u $$(id -u):$$(id -g)                                              \
-	    -v "$$(pwd)/.go:/go"                                                \
-	    -v "$$(pwd):/go/src/$(PKG)"                                         \
-	    -v "$$(pwd)/bin/$(ARCH):/go/bin"                                    \
-	    -v "$$(pwd)/bin/$(ARCH):/go/bin/$$(go env GOOS)_$(ARCH)"            \
-	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static" \
-	    -v "$$(pwd)/.go/cache:/.cache"                                      \
-	    -w /go/src/$(PKG)                                                   \
-	    $(BUILD_IMAGE)                                                      \
+	@docker run                                                                 \
+	    -ti                                                                     \
+	    --rm                                                                    \
+	    -u $$(id -u):$$(id -g)                                                  \
+	    -v $$(pwd):/go/src/$(PKG)                                               \
+	    -v $$(pwd)/bin/$(OS)_$(ARCH):/go/bin                                    \
+	    -v $$(pwd)/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)                      \
+	    -v $$(pwd)/.go/std/$(OS)_$(ARCH):/usr/local/go/pkg/$(OS)_$(ARCH)_static \
+	    -v $$(pwd)/.go/cache:/.cache                                            \
+	    -w /go/src/$(PKG)                                                       \
+	    --env HTTP_PROXY=$(HTTP_PROXY)                                          \
+	    --env HTTPS_PROXY=$(HTTPS_PROXY)                                        \
+	    $(BUILD_IMAGE)                                                          \
 	    /bin/sh $(CMD)
 
-DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
+DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(TAG)
 
-container: .container-$(DOTFILE_IMAGE) container-name
-.container-$(DOTFILE_IMAGE): bin/$(ARCH)/$(BIN) Dockerfile.in
-	@sed \
-	    -e 's|ARG_BIN|$(BIN)|g' \
-	    -e 's|ARG_ARCH|$(ARCH)|g' \
-	    -e 's|ARG_FROM|$(BASEIMAGE)|g' \
-	    Dockerfile.in > .dockerfile-$(ARCH)
-	@docker build -t $(IMAGE):$(VERSION) -f .dockerfile-$(ARCH) .
-	@docker images -q $(IMAGE):$(VERSION) > $@
+container: .container-$(DOTFILE_IMAGE) say_container_name
+.container-$(DOTFILE_IMAGE): bin/$(OS)_$(ARCH)/$(BIN) Dockerfile.in
+	@sed                                 \
+	    -e 's|{ARG_BIN}|$(BIN)|g'        \
+	    -e 's|{ARG_ARCH}|$(ARCH)|g'      \
+	    -e 's|{ARG_OS}|$(OS)|g'          \
+	    -e 's|{ARG_FROM}|$(BASEIMAGE)|g' \
+	    Dockerfile.in > .dockerfile-$(OS)_$(ARCH)
+	@docker build -t $(IMAGE):$(TAG) -f .dockerfile-$(OS)_$(ARCH) .
+	@docker images -q $(IMAGE):$(TAG) > $@
 
-container-name:
-	@echo "container: $(IMAGE):$(VERSION)"
+say_container_name:
+	@echo "container: $(IMAGE):$(TAG)"
 
-push: .push-$(DOTFILE_IMAGE) push-name
+push: .push-$(DOTFILE_IMAGE) say_push_name
 .push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
-ifeq ($(findstring gcr.io,$(REGISTRY)),gcr.io)
-	@gcloud docker -- push $(IMAGE):$(VERSION)
-else
-	@docker push $(IMAGE):$(VERSION)
-endif
-	@docker images -q $(IMAGE):$(VERSION) > $@
+	@docker push $(IMAGE):$(TAG)
 
-push-name:
-	@echo "pushed: $(IMAGE):$(VERSION)"
+say_push_name:
+	@echo "pushed: $(IMAGE):$(TAG)"
+
+manifest-list: push
+	platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
+	manifest-tool                                         \
+	    --username=oauth2accesstoken                      \
+	    --password=$$(gcloud auth print-access-token)     \
+	    push from-args                                    \
+	    --platforms "$$platforms"                         \
+	    --template $(REGISTRY)/$(BIN):$(VERSION)__OS_ARCH \
+	    --target $(REGISTRY)/$(BIN):$(VERSION)
 
 version:
 	@echo $(VERSION)
 
-test: build-dirs
-	@docker run                                                             \
-	    -ti                                                                 \
-	    --rm                                                                \
-	    -u $$(id -u):$$(id -g)                                              \
-	    -v "$$(pwd)/.go:/go"                                                \
-	    -v "$$(pwd):/go/src/$(PKG)"                                         \
-	    -v "$$(pwd)/bin/$(ARCH):/go/bin"                                    \
-	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static" \
-	    -v "$$(pwd)/.go/cache:/.cache"                                      \
-	    -w /go/src/$(PKG)                                                   \
-	    $(BUILD_IMAGE)                                                      \
-	    /bin/sh -c "                                                        \
-	        ./build/test.sh $(SRC_DIRS)                                     \
+test: $(BUILD_DIRS)
+	@docker run                                                                  \
+	    -i                                                                       \
+	    --rm                                                                     \
+	    -u $$(id -u):$$(id -g)                                                   \
+	    -v $$(pwd)/.go:/go                                                       \
+	    -v $$(pwd):/go/src/$(PKG)                                                \
+	    -v $$(pwd)/bin/$(OS)_$(ARCH):/go/bin                                     \
+	    -v $$(pwd)/.go/std/$(OS)_$(ARCH):/usr/local/go/pkg/$(OS)_$(ARCH)_static  \
+	    -v $$(pwd)/.go/cache:/.cache                                             \
+	    -w /go/src/$(PKG)                                                        \
+	    --env HTTP_PROXY=$(HTTP_PROXY)                                           \
+	    --env HTTPS_PROXY=$(HTTPS_PROXY)                                         \
+	    $(BUILD_IMAGE)                                                           \
+	    /bin/sh -c "                                                             \
+	        ARCH=$(ARCH)                                                         \
+	        OS=$(OS)                                                             \
+	        VERSION=$(VERSION)                                                   \
+	        PKG=$(PKG)                                                           \
+	        ./build/test.sh $(SRC_DIRS)                                          \
 	    "
 
-build-dirs:
-	@mkdir -p bin/$(ARCH)
-	@mkdir -p .go .go/cache .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
+$(BUILD_DIRS):
+	@mkdir -p $@
 
 clean: container-clean bin-clean
 
