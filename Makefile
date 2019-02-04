@@ -133,7 +133,7 @@ $(OUTBIN): .go/$(OUTBIN).stamp
 	        ./build/build.sh                                                    \
 	    "
 	@if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then \
-	    mv .go/$(OUTBIN) > $(OUTBIN);          \
+	    mv .go/$(OUTBIN)  $(OUTBIN);           \
 	    date >$@;                              \
 	fi
 
