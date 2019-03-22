@@ -30,25 +30,13 @@ VERSION := $(shell git describe --tags --always --dirty)
 
 SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 
-ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le
+ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x
 
 # Used internally.  Users should pass GOOS and/or GOARCH.
 OS := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 
-# Set default base image dynamically for each arch
-# TODO: make these all consistent and tagged.
-ifeq ($(OS)/$(ARCH),linux/amd64)
-    BASEIMAGE ?= alpine:3.8
-else ifeq ($(OS)/$(ARCH),linux/arm)
-    BASEIMAGE ?= armel/busybox
-else ifeq ($(OS)/$(ARCH),linux/arm64)
-    BASEIMAGE ?= aarch64/busybox
-else ifeq ($(OS)/$(ARCH),linux/ppc64le)
-    BASEIMAGE ?= ppc64le/busybox
-else
-    $(error Unsupported target platform '$(OS)/$(ARCH)')
-endif
+BASEIMAGE ?= k8s.gcr.io/debian-base:0.4.1
 
 IMAGE := $(REGISTRY)/$(BIN)
 TAG := $(VERSION)__$(OS)_$(ARCH)
