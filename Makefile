@@ -15,9 +15,6 @@
 # The binary to build (just the basename).
 BIN := myapp
 
-# This repo's root import path (under GOPATH).
-PKG := github.com/thockin/go-build-template
-
 # Where to push the docker image.
 REGISTRY ?= thockin
 
@@ -94,10 +91,7 @@ build: bin/$(OS)_$(ARCH)/$(BIN)
 
 # Directories that we need created to build/test.
 BUILD_DIRS := bin/$(OS)_$(ARCH)     \
-              .go/src/$(PKG)        \
-              .go/pkg               \
               .go/bin/$(OS)_$(ARCH) \
-              .go/std/$(OS)_$(ARCH) \
               .go/cache
 
 # The following structure defeats Go's (intentional) behavior to always touch
@@ -111,26 +105,23 @@ $(OUTBIN): .go/$(OUTBIN).stamp
 .PHONY: .go/$(OUTBIN).stamp
 .go/$(OUTBIN).stamp: $(BUILD_DIRS)
 	@echo "making $(OUTBIN)"
-	@docker run                                                                 \
-	    -i                                                                      \
-	    --rm                                                                    \
-	    -u $$(id -u):$$(id -g)                                                  \
-	    -v $$(pwd):/go/src/$(PKG)                                               \
-	    -v $$(pwd)/.go:/go                                                      \
-	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                                \
-	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)                  \
-	    -v $$(pwd)/.go/std/$(OS)_$(ARCH):/usr/local/go/pkg/$(OS)_$(ARCH)_static \
-	    -v $$(pwd)/.go/cache:/.cache                                            \
-	    -w /go/src/$(PKG)                                                       \
-	    --env HTTP_PROXY=$(HTTP_PROXY)                                          \
-	    --env HTTPS_PROXY=$(HTTPS_PROXY)                                        \
-	    $(BUILD_IMAGE)                                                          \
-	    /bin/sh -c "                                                            \
-	        ARCH=$(ARCH)                                                        \
-	        OS=$(OS)                                                            \
-	        VERSION=$(VERSION)                                                  \
-	        PKG=$(PKG)                                                          \
-	        ./build/build.sh                                                    \
+	@docker run                                                 \
+	    -i                                                      \
+	    --rm                                                    \
+	    -u $$(id -u):$$(id -g)                                  \
+	    -v $$(pwd):/src                                         \
+	    -w /src                                                 \
+	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
+	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
+	    -v $$(pwd)/.go/cache:/.cache                            \
+	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
+	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
+	    $(BUILD_IMAGE)                                          \
+	    /bin/sh -c "                                            \
+	        ARCH=$(ARCH)                                        \
+	        OS=$(OS)                                            \
+	        VERSION=$(VERSION)                                  \
+	        ./build/build.sh                                    \
 	    "
 	@if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then \
 	    mv .go/$(OUTBIN) $(OUTBIN);            \
@@ -140,20 +131,18 @@ $(OUTBIN): .go/$(OUTBIN).stamp
 # Example: make shell CMD="-c 'date > datefile'"
 shell: $(BUILD_DIRS)
 	@echo "launching a shell in the containerized build environment"
-	@docker run                                                                 \
-	    -ti                                                                     \
-	    --rm                                                                    \
-	    -u $$(id -u):$$(id -g)                                                  \
-	    -v $$(pwd):/go/src/$(PKG)                                               \
-	    -v $$(pwd)/.go:/go                                                      \
-	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                                \
-	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)                  \
-	    -v $$(pwd)/.go/std/$(OS)_$(ARCH):/usr/local/go/pkg/$(OS)_$(ARCH)_static \
-	    -v $$(pwd)/.go/cache:/.cache                                            \
-	    -w /go/src/$(PKG)                                                       \
-	    --env HTTP_PROXY=$(HTTP_PROXY)                                          \
-	    --env HTTPS_PROXY=$(HTTPS_PROXY)                                        \
-	    $(BUILD_IMAGE)                                                          \
+	@docker run                                                 \
+	    -ti                                                     \
+	    --rm                                                    \
+	    -u $$(id -u):$$(id -g)                                  \
+	    -v $$(pwd):/src                                         \
+	    -w /src                                                 \
+	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
+	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
+	    -v $$(pwd)/.go/cache:/.cache                            \
+	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
+	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
+	    $(BUILD_IMAGE)                                          \
 	    /bin/sh $(CMD)
 
 # Used to track state in hidden files.
@@ -194,26 +183,23 @@ version:
 	@echo $(VERSION)
 
 test: $(BUILD_DIRS)
-	@docker run                                                                 \
-	    -i                                                                      \
-	    --rm                                                                    \
-	    -u $$(id -u):$$(id -g)                                                  \
-	    -v $$(pwd):/go/src/$(PKG)                                               \
-	    -v $$(pwd)/.go:/go                                                      \
-	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                                \
-	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)                  \
-	    -v $$(pwd)/.go/std/$(OS)_$(ARCH):/usr/local/go/pkg/$(OS)_$(ARCH)_static \
-	    -v $$(pwd)/.go/cache:/.cache                                            \
-	    -w /go/src/$(PKG)                                                       \
-	    --env HTTP_PROXY=$(HTTP_PROXY)                                          \
-	    --env HTTPS_PROXY=$(HTTPS_PROXY)                                        \
-	    $(BUILD_IMAGE)                                                          \
-	    /bin/sh -c "                                                            \
-	        ARCH=$(ARCH)                                                        \
-	        OS=$(OS)                                                            \
-	        VERSION=$(VERSION)                                                  \
-	        PKG=$(PKG)                                                          \
-	        ./build/test.sh $(SRC_DIRS)                                         \
+	@docker run                                                 \
+	    -i                                                      \
+	    --rm                                                    \
+	    -u $$(id -u):$$(id -g)                                  \
+	    -v $$(pwd):/src                                         \
+	    -w /src                                                 \
+	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
+	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
+	    -v $$(pwd)/.go/cache:/.cache                            \
+	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
+	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
+	    $(BUILD_IMAGE)                                          \
+	    /bin/sh -c "                                            \
+	        ARCH=$(ARCH)                                        \
+	        OS=$(OS)                                            \
+	        VERSION=$(VERSION)                                  \
+	        ./build/test.sh $(SRC_DIRS)                         \
 	    "
 
 $(BUILD_DIRS):

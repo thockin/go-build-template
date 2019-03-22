@@ -18,10 +18,6 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -z "${PKG:-}" ]; then
-    echo "PKG must be set"
-    exit 1
-fi
 if [ -z "${OS:-}" ]; then
     echo "OS must be set"
     exit 1
@@ -38,8 +34,9 @@ fi
 export CGO_ENABLED=0
 export GOARCH="${ARCH}"
 export GOOS="${OS}"
+export GOFLAGS="-mod=vendor"
 
-go install                                                         \
-    -installsuffix "static"                                        \
-    -ldflags "-X ${PKG}/pkg/version.VERSION=${VERSION}"            \
+go install                                                      \
+    -installsuffix "static"                                     \
+    -ldflags "-X $(go list -m)/pkg/version.VERSION=${VERSION}"  \
     ./...
