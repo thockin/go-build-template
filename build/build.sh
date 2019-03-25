@@ -34,6 +34,7 @@ fi
 export CGO_ENABLED=0
 export GOARCH="${ARCH}"
 export GOOS="${OS}"
+export GO111MODULE=on
 export GOFLAGS="-mod=vendor"
 
 go install                                                      \
