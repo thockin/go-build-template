@@ -19,11 +19,11 @@ set -o nounset
 set -o pipefail
 
 export CGO_ENABLED=0
+export GOFLAGS="-mod=vendor"
 
 TARGETS=$(for d in "$@"; do echo ./$d/...; done)
 
 echo "Running tests:"
-go test -i -installsuffix "static" ${TARGETS}
 go test -installsuffix "static" ${TARGETS}
 echo
 
