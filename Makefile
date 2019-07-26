@@ -157,7 +157,7 @@ push: .push-$(DOTFILE_IMAGE) say_push_name
 say_push_name:
 	@echo "pushed: $(IMAGE):$(TAG)"
 
-manifest-list: push
+manifest-list: all-push
 	platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
 	manifest-tool                                         \
 	    --username=oauth2accesstoken                      \
