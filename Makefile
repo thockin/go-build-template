@@ -150,8 +150,7 @@ container: .container-$(DOTFILE_IMAGE) say_container_name
 say_container_name:
 	@echo "container: $(IMAGE):$(TAG)"
 
-push: .push-$(DOTFILE_IMAGE) say_push_name
-.push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
+push: .container-$(DOTFILE_IMAGE) say_push_name
 	@docker push $(IMAGE):$(TAG)
 
 say_push_name:
@@ -196,7 +195,7 @@ $(BUILD_DIRS):
 clean: container-clean bin-clean
 
 container-clean:
-	rm -rf .container-* .dockerfile-* .push-*
+	rm -rf .container-* .dockerfile-*
 
 bin-clean:
 	rm -rf .go bin
