@@ -1,0 +1,12 @@
+# https://console.cloud.google.com/cloud-build/builds?project=thockin-gce-public&authuser=1
+steps:
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: make
+    env:
+      - GOOS="fake"   # the Makefile looks for these,
+      - GOARCH="fake" # even if it won't need them
+      - VERSION=$SHORT_SHA
+    args:
+      - test
+      - all-container
+timeout: 300s
