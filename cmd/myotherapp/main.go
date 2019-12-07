@@ -19,5 +19,5 @@ package main
 import "log"
 
 func main() {
-	log.Printf("myapp: hello, world!")
+	log.Printf("myotherapp: hello, world!")
 }
