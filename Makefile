@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The binary to build (just the basename).
-BIN := myapp
+# The project base name
+PROJ := myapp
+
+# The binaries to build (just the basenames).
+BINS := myapp myotherapp
 
 # Where to push the docker image.
 REGISTRY ?= thockin
@@ -38,10 +41,16 @@ ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 
 BASEIMAGE ?= gcr.io/distroless/static
 
-IMAGE := $(REGISTRY)/$(BIN)
+IMAGE := $(REGISTRY)/$(PROJ)
 TAG := $(VERSION)__$(OS)_$(ARCH)
 
 BUILD_IMAGE ?= golang:1.13-alpine
+
+OUTDIR = bin/$(OS)_$(ARCH)
+
+ALL_OUTBINS := $(addprefix $(OUTDIR)/, $(BINS))
+
+STAMPS:= $(addsuffix .stamp, $(addprefix .go/, $(ALL_OUTBINS)))
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
@@ -75,24 +84,23 @@ all-container: $(addprefix container-, $(subst /,_, $(ALL_PLATFORMS)))
 
 all-push: $(addprefix push-, $(subst /,_, $(ALL_PLATFORMS)))
 
-build: bin/$(OS)_$(ARCH)/$(BIN)
+build: $(ALL_OUTBINS)
 
 # Directories that we need created to build/test.
-BUILD_DIRS := bin/$(OS)_$(ARCH)     \
+BUILD_DIRS := $(OUTDIR)             \
               .go/bin/$(OS)_$(ARCH) \
               .go/cache
 
 # The following structure defeats Go's (intentional) behavior to always touch
 # result files, even if they have not changed.  This will still run `go` but
 # will not trigger further work if nothing has actually changed.
-OUTBIN = bin/$(OS)_$(ARCH)/$(BIN)
-$(OUTBIN): .go/$(OUTBIN).stamp
+$(OUTDIR)/%: $(STAMPS)
 	@true
 
 # This will build the binary under ./.go and update the real binary iff needed.
-.PHONY: .go/$(OUTBIN).stamp
-.go/$(OUTBIN).stamp: $(BUILD_DIRS)
-	@echo "making $(OUTBIN)"
+.PHONY: .go/$(OUTDIR)/%.stamp
+.go/$(OUTDIR)/%.stamp: $(BUILD_DIRS)
+	@echo "making $(OUTDIR)/$*"
 	@docker run                                                 \
 	    -i                                                      \
 	    --rm                                                    \
@@ -111,9 +119,9 @@ $(OUTBIN): .go/$(OUTBIN).stamp
 	        VERSION=$(VERSION)                                  \
 	        ./build/build.sh                                    \
 	    "
-	@if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then \
-	    mv .go/$(OUTBIN) $(OUTBIN);            \
-	    date >$@;                              \
+	@if ! cmp -s .go/$(OUTDIR)/$* $(OUTDIR)/$*; then \
+	    mv .go/$(OUTDIR)/$* $(OUTDIR)/$*;            \
+	    date >$@;                                    \
 	fi
 
 # Example: make shell CMD="-c 'date > datefile'"
@@ -137,9 +145,9 @@ shell: $(BUILD_DIRS)
 DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(TAG)
 
 container: .container-$(DOTFILE_IMAGE) say_container_name
-.container-$(DOTFILE_IMAGE): bin/$(OS)_$(ARCH)/$(BIN) Dockerfile.in
+.container-$(DOTFILE_IMAGE): bin/$(OS)_$(ARCH)/$(PROJ) Dockerfile.in
 	@sed                                 \
-	    -e 's|{ARG_BIN}|$(BIN)|g'        \
+	    -e 's|{ARG_BIN}|$(PROJ)|g'       \
 	    -e 's|{ARG_ARCH}|$(ARCH)|g'      \
 	    -e 's|{ARG_OS}|$(OS)|g'          \
 	    -e 's|{ARG_FROM}|$(BASEIMAGE)|g' \
@@ -164,8 +172,8 @@ manifest-list: all-push
 	    --password=$$(gcloud auth print-access-token)     \
 	    push from-args                                    \
 	    --platforms "$$platforms"                         \
-	    --template $(REGISTRY)/$(BIN):$(VERSION)__OS_ARCH \
-	    --target $(REGISTRY)/$(BIN):$(VERSION)
+	    --template $(REGISTRY)/$(PROJ):$(VERSION)__OS_ARCH \
+	    --target $(REGISTRY)/$(PROJ):$(VERSION)
 
 version:
 	@echo $(VERSION)
