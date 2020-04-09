@@ -12,8 +12,8 @@ This has only been tested on Linux, and depends on Docker to build.
 To use this, simply copy these files and make the following changes:
 
 Makefile:
-   - change `BIN` to your binary name
-   - rename `cmd/myapp` to `cmd/$BIN`
+   - change `BINS` to your binary name(s)
+   - replace `cmd/myapp-*` with one directory for each of your `BINS`
    - change `REGISTRY` to the Docker registry you want to use
    - maybe change `SRC_DIRS` if you use some other layout
    - choose a strategy for `VERSION` values - git tags or manual

@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The binary to build (just the basename).
-BIN := myapp
+# The binaries to build (just the basenames).
+BINS := myapp-1 myapp-2
 
 # Where to push the docker image.
-REGISTRY ?= thockin
+REGISTRY ?= example.com
 
 # This version-strategy uses git tags to set the version string
 VERSION ?= $(shell git describe --tags --always --dirty)
@@ -38,10 +38,9 @@ ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 
 BASEIMAGE ?= gcr.io/distroless/static
 
-IMAGE := $(REGISTRY)/$(BIN)
 TAG := $(VERSION)__$(OS)_$(ARCH)
 
-BUILD_IMAGE ?= golang:1.13-alpine
+BUILD_IMAGE ?= golang:1.14-alpine
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
@@ -75,7 +74,7 @@ all-container: $(addprefix container-, $(subst /,_, $(ALL_PLATFORMS)))
 
 all-push: $(addprefix push-, $(subst /,_, $(ALL_PLATFORMS)))
 
-build: bin/$(OS)_$(ARCH)/$(BIN)
+build: $(foreach bin,$(BINS),bin/$(OS)_$(ARCH)/$(bin))
 
 # Directories that we need created to build/test.
 BUILD_DIRS := bin/$(OS)_$(ARCH)     \
@@ -85,14 +84,34 @@ BUILD_DIRS := bin/$(OS)_$(ARCH)     \
 # The following structure defeats Go's (intentional) behavior to always touch
 # result files, even if they have not changed.  This will still run `go` but
 # will not trigger further work if nothing has actually changed.
-OUTBIN = bin/$(OS)_$(ARCH)/$(BIN)
-$(OUTBIN): .go/$(OUTBIN).stamp
+OUTBINS = $(foreach bin,$(BINS),bin/$(OS)_$(ARCH)/$(bin))
+
+# Each outbin target is just a facade for the respective stampfile target.
+# This `eval` establishes the dependencies for each.
+$(foreach outbin,$(OUTBINS),$(eval  \
+    $(outbin): .go/$(outbin).stamp  \
+))
+# This is the target definition for all outbins.
+$(OUTBINS):
 	@true
 
+# Each stampfile target can reference an $(OUTBIN) variable.
+$(foreach outbin,$(OUTBINS),$(eval $(strip   \
+    .go/$(outbin).stamp: OUTBIN = $(outbin)  \
+)))
+# This is the target definition for all stampfiles.
 # This will build the binary under ./.go and update the real binary iff needed.
-.PHONY: .go/$(OUTBIN).stamp
-.go/$(OUTBIN).stamp: $(BUILD_DIRS)
-	@echo "making $(OUTBIN)"
+STAMPS = $(foreach outbin,$(OUTBINS),.go/$(outbin).stamp)
+.PHONY: $(STAMPS)
+$(STAMPS): go-build
+	@echo "binary: $(OUTBIN)"
+	@if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then  \
+	    mv .go/$(OUTBIN) $(OUTBIN);             \
+	    date >$@;                               \
+	fi
+
+# This runs the actual `go build` which updates all binaries.
+go-build: $(BUILD_DIRS)
 	@docker run                                                 \
 	    -i                                                      \
 	    --rm                                                    \
@@ -111,10 +130,6 @@ $(OUTBIN): .go/$(OUTBIN).stamp
 	        VERSION=$(VERSION)                                  \
 	        ./build/build.sh                                    \
 	    "
-	@if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then \
-	    mv .go/$(OUTBIN) $(OUTBIN);            \
-	    date >$@;                              \
-	fi
 
 # Example: make shell CMD="-c 'date > datefile'"
 shell: $(BUILD_DIRS)
@@ -133,38 +148,49 @@ shell: $(BUILD_DIRS)
 	    $(BUILD_IMAGE)                                          \
 	    /bin/sh $(CMD)
 
-# Used to track state in hidden files.
-DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(TAG)
+CONTAINER_DOTFILES = $(foreach bin,$(BINS),.container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG))
 
-container: .container-$(DOTFILE_IMAGE) say_container_name
-.container-$(DOTFILE_IMAGE): bin/$(OS)_$(ARCH)/$(BIN) Dockerfile.in
+container containers: $(CONTAINER_DOTFILES)
+	@for bin in $(BINS); do              \
+	    echo "container: $(REGISTRY)/$$bin:$(TAG)"; \
+	done
+
+# Each container-dotfile target can reference a $(BIN) variable.
+# This is done in 2 steps to enable target-specific variables.
+$(foreach bin,$(BINS),$(eval $(strip                                 \
+    .container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG): BIN = $(bin)  \
+)))
+$(foreach bin,$(BINS),$(eval                                                                   \
+    .container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG): bin/$(OS)_$(ARCH)/$(bin) Dockerfile.in  \
+))
+# This is the target definition for all container-dotfiles.
+# These are used to track build state in hidden files.
+$(CONTAINER_DOTFILES):
 	@sed                                 \
 	    -e 's|{ARG_BIN}|$(BIN)|g'        \
 	    -e 's|{ARG_ARCH}|$(ARCH)|g'      \
 	    -e 's|{ARG_OS}|$(OS)|g'          \
 	    -e 's|{ARG_FROM}|$(BASEIMAGE)|g' \
-	    Dockerfile.in > .dockerfile-$(OS)_$(ARCH)
-	@docker build -t $(IMAGE):$(TAG) -f .dockerfile-$(OS)_$(ARCH) .
-	@docker images -q $(IMAGE):$(TAG) > $@
+	    Dockerfile.in > .dockerfile-$(BIN)-$(OS)_$(ARCH)
+	@docker build -t $(REGISTRY)/$(BIN):$(TAG) -f .dockerfile-$(BIN)-$(OS)_$(ARCH) .
+	@docker images -q $(REGISTRY)/$(BIN):$(TAG) > $@
+	@echo
 
-say_container_name:
-	@echo "container: $(IMAGE):$(TAG)"
-
-push: .container-$(DOTFILE_IMAGE) say_push_name
-	@docker push $(IMAGE):$(TAG)
-
-say_push_name:
-	@echo "pushed: $(IMAGE):$(TAG)"
+push: $(CONTAINER_DOTFILES)
+	@for bin in $(BINS); do                    \
+	    docker push $(REGISTRY)/$$bin:$(TAG);  \
+	done
 
 manifest-list: all-push
-	platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
-	manifest-tool                                         \
-	    --username=oauth2accesstoken                      \
-	    --password=$$(gcloud auth print-access-token)     \
-	    push from-args                                    \
-	    --platforms "$$platforms"                         \
-	    --template $(REGISTRY)/$(BIN):$(VERSION)__OS_ARCH \
-	    --target $(REGISTRY)/$(BIN):$(VERSION)
+	@for bin in $(BINS); do                                   \
+	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
+	    manifest-tool                                         \
+	        --username=oauth2accesstoken                      \
+	        --password=$$(gcloud auth print-access-token)     \
+	        push from-args                                    \
+	        --platforms "$$platforms"                         \
+	        --template $(REGISTRY)/$$bin:$(VERSION)__OS_ARCH  \
+	        --target $(REGISTRY)/$$bin:$(VERSION)
 
 version:
 	@echo $(VERSION)
