@@ -45,6 +45,7 @@ BUILD_IMAGE ?= golang:1.14-alpine
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
 # If you want to build AND push all containers, see the 'all-push' rule.
+all: # @HELP builds binaries for one platform ($OS/$ARCH)
 all: build
 
 # For the following OS/ARCH expansions, we transform OS/ARCH into OS_ARCH
@@ -68,10 +69,13 @@ push-%:
 	    GOOS=$(firstword $(subst _, ,$*)) \
 	    GOARCH=$(lastword $(subst _, ,$*))
 
+all-build: # @HELP builds binaries for all platforms
 all-build: $(addprefix build-, $(subst /,_, $(ALL_PLATFORMS)))
 
+all-container: # @HELP builds containers for all platforms
 all-container: $(addprefix container-, $(subst /,_, $(ALL_PLATFORMS)))
 
+all-push: # @HELP pushes containers for all platforms to the defined registry
 all-push: $(addprefix push-, $(subst /,_, $(ALL_PLATFORMS)))
 
 build: $(foreach bin,$(BINS),bin/$(OS)_$(ARCH)/$(bin))
@@ -132,6 +136,7 @@ go-build: $(BUILD_DIRS)
 	    "
 
 # Example: make shell CMD="-c 'date > datefile'"
+shell: # @HELP launches a shell in the containerized build environment
 shell: $(BUILD_DIRS)
 	@echo "launching a shell in the containerized build environment"
 	@docker run                                                 \
@@ -150,6 +155,7 @@ shell: $(BUILD_DIRS)
 
 CONTAINER_DOTFILES = $(foreach bin,$(BINS),.container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG))
 
+container containers: # @HELP builds containers for one platform ($OS/$ARCH)
 container containers: $(CONTAINER_DOTFILES)
 	@for bin in $(BINS); do              \
 	    echo "container: $(REGISTRY)/$$bin:$(TAG)"; \
@@ -176,11 +182,13 @@ $(CONTAINER_DOTFILES):
 	@docker images -q $(REGISTRY)/$(BIN):$(TAG) > $@
 	@echo
 
+push: # @HELP pushes the container for one platform ($OS/$ARCH) to the defined registry
 push: $(CONTAINER_DOTFILES)
 	@for bin in $(BINS); do                    \
 	    docker push $(REGISTRY)/$$bin:$(TAG);  \
 	done
 
+manifest-list: # @HELP builds a manifest list of containers for all platforms
 manifest-list: all-push
 	@for bin in $(BINS); do                                   \
 	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
@@ -192,9 +200,11 @@ manifest-list: all-push
 	        --template $(REGISTRY)/$$bin:$(VERSION)__OS_ARCH  \
 	        --target $(REGISTRY)/$$bin:$(VERSION)
 
+version: # @HELP outputs the version string
 version:
 	@echo $(VERSION)
 
+test: # @HELP runs tests, as defined in ./build/test.sh
 test: $(BUILD_DIRS)
 	@docker run                                                 \
 	    -i                                                      \
@@ -218,6 +228,7 @@ test: $(BUILD_DIRS)
 $(BUILD_DIRS):
 	@mkdir -p $@
 
+clean: # @HELP removes built binaries and temporary files
 clean: container-clean bin-clean
 
 container-clean:
@@ -225,3 +236,18 @@ container-clean:
 
 bin-clean:
 	rm -rf .go bin
+
+help: # @HELP prints this message
+help:
+	@echo "VARIABLES:"
+	@echo "  BINS = $(BINS)"
+	@echo "  OS = $(OS)"
+	@echo "  ARCH = $(ARCH)"
+	@echo "  REGISTRY = $(REGISTRY)"
+	@echo
+	@echo "TARGETS:"
+	@grep -E '^.*: *# *@HELP' $(MAKEFILE_LIST)    \
+	    | awk '                                   \
+	        BEGIN {FS = ": *# *@HELP"};           \
+	        { printf "  %-30s %s\n", $$1, $$2 };  \
+	    '
