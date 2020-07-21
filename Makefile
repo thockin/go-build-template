@@ -30,11 +30,16 @@ VERSION := $(shell git describe --tags --always --dirty)
 
 SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 
-ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x
+ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x windows/amd64
 
 # Used internally.  Users should pass GOOS and/or GOARCH.
 OS := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
+
+BIN_EXTENSION := ""
+ifeq ($(OS), windows)
+	BIN_EXTENSION := ".exe"
+endif
 
 BASEIMAGE ?= gcr.io/distroless/static
 
@@ -111,9 +116,9 @@ $(OUTBIN): .go/$(OUTBIN).stamp
 	        VERSION=$(VERSION)                                  \
 	        ./build/build.sh                                    \
 	    "
-	@if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then \
-	    mv .go/$(OUTBIN) $(OUTBIN);            \
-	    date >$@;                              \
+	@if ! cmp -s .go/$(OUTBIN)$(BIN_EXTENSION) $(OUTBIN); then        \
+	    mv .go/$(OUTBIN)$(BIN_EXTENSION) $(OUTBIN)$(BIN_EXTENSION);   \
+	    date >$@;                                                     \
 	fi
 
 # Example: make shell CMD="-c 'date > datefile'"
@@ -138,11 +143,12 @@ DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(TAG)
 
 container: .container-$(DOTFILE_IMAGE) say_container_name
 .container-$(DOTFILE_IMAGE): bin/$(OS)_$(ARCH)/$(BIN) Dockerfile.in
-	@sed                                 \
-	    -e 's|{ARG_BIN}|$(BIN)|g'        \
-	    -e 's|{ARG_ARCH}|$(ARCH)|g'      \
-	    -e 's|{ARG_OS}|$(OS)|g'          \
-	    -e 's|{ARG_FROM}|$(BASEIMAGE)|g' \
+	@sed                                 		      \
+	    -e 's|{ARG_BIN}|$(BIN)|g'        		      \
+		-e 's|{ARG_BIN_EXTENSION}|${BIN_EXTENSION}|g' \
+	    -e 's|{ARG_ARCH}|$(ARCH)|g'      			  \
+	    -e 's|{ARG_OS}|$(OS)|g'          			  \
+	    -e 's|{ARG_FROM}|$(BASEIMAGE)|g' 			  \
 	    Dockerfile.in > .dockerfile-$(OS)_$(ARCH)
 	@docker build -t $(IMAGE):$(TAG) -f .dockerfile-$(OS)_$(ARCH) .
 	@docker images -q $(IMAGE):$(TAG) > $@
