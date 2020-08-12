@@ -15,6 +15,10 @@
 # The binaries to build (just the basenames).
 BINS := myapp-1 myapp-2
 
+# Constants for compare OS
+LINUX := linux
+WINDOWS := windows
+
 # Where to push the docker image.
 REGISTRY ?= example.com
 
@@ -30,7 +34,7 @@ VERSION ?= $(shell git describe --tags --always --dirty)
 
 SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 
-ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x
+ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x windows/amd64
 
 # Used internally.  Users should pass GOOS and/or GOARCH.
 OS := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
@@ -109,9 +113,13 @@ STAMPS = $(foreach outbin,$(OUTBINS),.go/$(outbin).stamp)
 .PHONY: $(STAMPS)
 $(STAMPS): go-build
 	@echo "binary: $(OUTBIN)"
-	@if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then  \
-	    mv .go/$(OUTBIN) $(OUTBIN);             \
-	    date >$@;                               \
+	@if [ $(OS) = $(LINUX) ] && ! cmp -s .go/$(OUTBIN) $(OUTBIN); then \
+		mv .go/$(OUTBIN) $(OUTBIN);  \
+		date >$@;                    \
+	fi
+	@if [ $(OS) = $(WINDOWS) ] && ! cmp -s .go/$(OUTBIN).exe $(OUTBIN).exe; then \
+		mv .go/$(OUTBIN).exe $(OUTBIN).exe;  \
+		date >$@;                            \
 	fi
 
 # This runs the actual `go build` which updates all binaries.
