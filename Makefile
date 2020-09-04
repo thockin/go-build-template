@@ -30,7 +30,7 @@ VERSION ?= $(shell git describe --tags --always --dirty)
 
 SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 
-ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x
+ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x windows/amd64
 
 # Used internally.  Users should pass GOOS and/or GOARCH.
 OS := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
@@ -41,6 +41,11 @@ BASEIMAGE ?= gcr.io/distroless/static
 TAG := $(VERSION)__$(OS)_$(ARCH)
 
 BUILD_IMAGE ?= golang:1.14-alpine
+
+BIN_EXTENSION :=
+ifeq ($(OS), windows)
+  BIN_EXTENSION := .exe
+endif
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
@@ -78,17 +83,17 @@ all-container: $(addprefix container-, $(subst /,_, $(ALL_PLATFORMS)))
 all-push: # @HELP pushes containers for all platforms to the defined registry
 all-push: $(addprefix push-, $(subst /,_, $(ALL_PLATFORMS)))
 
-build: $(foreach bin,$(BINS),bin/$(OS)_$(ARCH)/$(bin))
+# The following structure defeats Go's (intentional) behavior to always touch
+# result files, even if they have not changed.  This will still run `go` but
+# will not trigger further work if nothing has actually changed.
+OUTBINS = $(foreach bin,$(BINS),bin/$(OS)_$(ARCH)/$(bin)$(BIN_EXTENSION))
+
+build: $(OUTBINS)
 
 # Directories that we need created to build/test.
 BUILD_DIRS := bin/$(OS)_$(ARCH)     \
               .go/bin/$(OS)_$(ARCH) \
               .go/cache
-
-# The following structure defeats Go's (intentional) behavior to always touch
-# result files, even if they have not changed.  This will still run `go` but
-# will not trigger further work if nothing has actually changed.
-OUTBINS = $(foreach bin,$(BINS),bin/$(OS)_$(ARCH)/$(bin))
 
 # Each outbin target is just a facade for the respective stampfile target.
 # This `eval` establishes the dependencies for each.
@@ -116,6 +121,8 @@ $(STAMPS): go-build
 
 # This runs the actual `go build` which updates all binaries.
 go-build: $(BUILD_DIRS)
+	@echo
+	@echo "building for $(OS)/$(ARCH)"
 	@docker run                                                 \
 	    -i                                                      \
 	    --rm                                                    \
