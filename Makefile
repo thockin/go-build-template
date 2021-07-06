@@ -95,6 +95,7 @@ build: $(OUTBINS)
 
 # Directories that we need created to build/test.
 BUILD_DIRS := bin/$(OS)_$(ARCH)     \
+              bin/tools             \
               .go/bin/$(OS)_$(ARCH) \
               .go/cache
 
@@ -164,6 +165,14 @@ shell: $(BUILD_DIRS)
 	    $(BUILD_IMAGE)                                          \
 	    /bin/sh $(CMD)
 
+LICENSES = .licenses
+
+$(LICENSES): bin/$(shell go env GOOS)_$(shell go env GOARCH)/$(BIN)
+	@go build -o ./bin/tools github.com/google/go-licenses
+	@rm -rf $(LICENSES)
+	@./bin/tools/go-licenses save ./... --save_path=$(LICENSES)
+	@chmod -R a+rx $(LICENSES)
+
 CONTAINER_DOTFILES = $(foreach bin,$(BINS),.container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG))
 
 container containers: # @HELP builds containers for one platform ($OS/$ARCH)
@@ -178,7 +187,7 @@ $(foreach bin,$(BINS),$(eval $(strip                                 \
     .container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG): BIN = $(bin)  \
 )))
 $(foreach bin,$(BINS),$(eval                                         \
-    .container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG): bin/$(OS)_$(ARCH)/$(bin)$(BIN_EXTENSION) Dockerfile.in  \
+    .container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG): bin/$(OS)_$(ARCH)/$(bin)$(BIN_EXTENSION) $(LICENSES) Dockerfile.in  \
 ))
 # This is the target definition for all container-dotfiles.
 # These are used to track build state in hidden files.
@@ -244,7 +253,7 @@ clean: # @HELP removes built binaries and temporary files
 clean: container-clean bin-clean
 
 container-clean:
-	rm -rf .container-* .dockerfile-*
+	rm -rf .container-* .dockerfile-* .push-* $(LICENSES)
 
 bin-clean:
 	rm -rf .go bin

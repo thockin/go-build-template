@@ -2,3 +2,4 @@
 /.go
 /.container-*
 /.dockerfile-*
+/.licenses
