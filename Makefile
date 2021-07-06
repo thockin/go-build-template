@@ -117,16 +117,19 @@ $(foreach outbin,$(OUTBINS),$(eval $(strip   \
 STAMPS = $(foreach outbin,$(OUTBINS),.go/$(outbin).stamp)
 .PHONY: $(STAMPS)
 $(STAMPS): go-build
-	@echo "binary: $(OUTBIN)"
+	@echo -ne "binary: $(OUTBIN)"
 	@if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then  \
 	    mv .go/$(OUTBIN) $(OUTBIN);             \
 	    date >$@;                               \
+	    echo;                                   \
+	else                                        \
+	    echo "  (cached)";                      \
 	fi
+	@echo
 
 # This runs the actual `go build` which updates all binaries.
 go-build: $(BUILD_DIRS)
-	@echo
-	@echo "building for $(OS)/$(ARCH)"
+	@echo "# building for $(OS)/$(ARCH)"
 	@docker run                                                 \
 	    -i                                                      \
 	    --rm                                                    \
@@ -150,7 +153,7 @@ go-build: $(BUILD_DIRS)
 # Example: make shell CMD="-c 'date > datefile'"
 shell: # @HELP launches a shell in the containerized build environment
 shell: $(BUILD_DIRS)
-	@echo "launching a shell in the containerized build environment"
+	@echo "# launching a shell in the containerized build environment"
 	@docker run                                                 \
 	    -ti                                                     \
 	    --rm                                                    \
@@ -180,6 +183,7 @@ container containers: $(CONTAINER_DOTFILES)
 	@for bin in $(BINS); do              \
 	    echo "container: $(REGISTRY)/$$bin:$(TAG)"; \
 	done
+	@echo
 
 # Each container-dotfile target can reference a $(BIN) variable.
 # This is done in 2 steps to enable target-specific variables.
@@ -207,7 +211,7 @@ $(CONTAINER_DOTFILES):
 	@echo
 
 push: # @HELP pushes the container for one platform ($OS/$ARCH) to the defined registry
-push: $(CONTAINER_DOTFILES)
+push: container
 	@for bin in $(BINS); do                    \
 	    docker push $(REGISTRY)/$$bin:$(TAG);  \
 	done
