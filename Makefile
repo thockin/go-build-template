@@ -24,6 +24,9 @@ VERSION ?= $(shell git describe --tags --always --dirty)
 # This version-strategy uses a manual value to set the version string
 #VERSION ?= 1.2.3
 
+# Which Go modules mode to use ("mod" or "vendor")
+MOD ?= mod
+
 ###
 ### These variables should not need tweaking.
 ###
@@ -139,6 +142,7 @@ go-build: $(BUILD_DIRS)
 	        ARCH=$(ARCH)                                        \
 	        OS=$(OS)                                            \
 	        VERSION=$(VERSION)                                  \
+	        MOD=$(MOD)                                          \
 	        ./build/build.sh                                    \
 	    "
 
@@ -229,6 +233,7 @@ test: $(BUILD_DIRS)
 	        ARCH=$(ARCH)                                        \
 	        OS=$(OS)                                            \
 	        VERSION=$(VERSION)                                  \
+	        MOD=$(MOD)                                          \
 	        ./build/test.sh $(SRC_DIRS)                         \
 	    "
 
@@ -250,6 +255,7 @@ help:
 	@echo "  BINS = $(BINS)"
 	@echo "  OS = $(OS)"
 	@echo "  ARCH = $(ARCH)"
+	@echo "  MOD = $(MOD)"
 	@echo "  REGISTRY = $(REGISTRY)"
 	@echo
 	@echo "TARGETS:"
