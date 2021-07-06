@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The binaries to build (just the basenames).
+# The binaries to build (just the basenames)
 BINS := myapp-1 myapp-2
 
 # Where to push the docker image.
@@ -198,7 +198,11 @@ $(CONTAINER_DOTFILES):
 	    -e 's|{ARG_OS}|$(OS)|g'                   \
 	    -e 's|{ARG_FROM}|$(BASEIMAGE)|g'          \
 	    Dockerfile.in > .dockerfile-$(BIN)-$(OS)_$(ARCH)
-	@docker build -t $(REGISTRY)/$(BIN):$(TAG) -f .dockerfile-$(BIN)-$(OS)_$(ARCH) .
+	@docker build                           \
+	    --no-cache                          \
+	    -t $(REGISTRY)/$(BIN):$(TAG)        \
+	    -f .dockerfile-$(BIN)-$(OS)_$(ARCH) \
+	    .
 	@docker images -q $(REGISTRY)/$(BIN):$(TAG) > $@
 	@echo
 
