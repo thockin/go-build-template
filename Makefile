@@ -97,7 +97,8 @@ build: $(OUTBINS)
 BUILD_DIRS := bin/$(OS)_$(ARCH)     \
               bin/tools             \
               .go/bin/$(OS)_$(ARCH) \
-              .go/cache
+              .go/cache             \
+              .go/pkg
 
 # Each outbin target is just a facade for the respective stampfile target.
 # This `eval` establishes the dependencies for each.
@@ -139,6 +140,7 @@ go-build: $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
+	    -v $$(pwd)/.go/pkg:/go/pkg                              \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
 	    $(BUILD_IMAGE)                                          \
@@ -163,6 +165,7 @@ shell: $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
+	    -v $$(pwd)/.go/pkg:/go/pkg                              \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
 	    $(BUILD_IMAGE)                                          \
@@ -243,6 +246,7 @@ test: $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
+	    -v $$(pwd)/.go/pkg:/go/pkg                              \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
 	    $(BUILD_IMAGE)                                          \
