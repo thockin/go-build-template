@@ -150,7 +150,7 @@ go-build: $(BUILD_DIRS)
 	        OS=$(OS)                                            \
 	        VERSION=$(VERSION)                                  \
 	        MOD=$(MOD)                                          \
-	        ./build/build.sh                                    \
+	        ./build/build.sh $(foreach d,$(SRC_DIRS),./$d/...)  \
 	    "
 
 # Example: make shell CMD="-c 'date > datefile'"
@@ -174,10 +174,15 @@ shell: $(BUILD_DIRS)
 
 LICENSES = .licenses
 
-$(LICENSES): bin/$(shell go env GOOS)_$(shell go env GOARCH)/$(BIN)
+$(LICENSES): $(BUILD_DIRS)
 	@go build -o ./bin/tools github.com/google/go-licenses
 	@rm -rf $(LICENSES)
-	@./bin/tools/go-licenses save ./... --save_path=$(LICENSES)
+	@DIRS=(); \
+	 for d in $(SRC_DIRS) vendor; do \
+	     test -d $$d && DIRS+=("./$$d/..."); \
+	 done; \
+	 echo "saving licenses for $${DIRS[@]}"; \
+	 ./bin/tools/go-licenses save "$${DIRS[@]}" --save_path=$(LICENSES)
 	@chmod -R a+rx $(LICENSES)
 
 CONTAINER_DOTFILES = $(foreach bin,$(BINS),.container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG))
@@ -256,7 +261,7 @@ test: $(BUILD_DIRS)
 	        OS=$(OS)                                            \
 	        VERSION=$(VERSION)                                  \
 	        MOD=$(MOD)                                          \
-	        ./build/test.sh $(SRC_DIRS)                         \
+	        ./build/test.sh $(foreach d,$(SRC_DIRS),./$d/...)   \
 	    "
 
 $(BUILD_DIRS):

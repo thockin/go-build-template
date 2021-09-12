@@ -40,4 +40,4 @@ export GOFLAGS="${GOFLAGS:-} -mod=${MOD}"
 go install                                                      \
     -installsuffix "static"                                     \
     -ldflags "-X $(go list -m)/pkg/version.Version=${VERSION}"  \
-    ./...
+    "$@"
