@@ -15,9 +15,6 @@
 # The binaries to build (just the basenames)
 BINS := myapp-1 myapp-2
 
-# Directories which hold app source (not vendored)
-SRC_DIRS := cmd pkg
-
 # The platforms we support.
 ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x windows/amd64
 
@@ -155,7 +152,7 @@ go-build: $(BUILD_DIRS)
 	        OS=$(OS)                                            \
 	        VERSION=$(VERSION)                                  \
 	        MOD=$(MOD)                                          \
-	        ./build/build.sh $(foreach d,$(SRC_DIRS),./$d/...)  \
+	        ./build/build.sh ./...                              \
 	    "
 
 # Example: make shell CMD="-c 'date > datefile'"
@@ -184,11 +181,7 @@ $(LICENSES): $(BUILD_DIRS)
 	 go build -o ../bin/tools github.com/google/go-licenses;  \
 	 popd >/dev/null
 	@rm -rf $(LICENSES)
-	@DIRS=(); \
-	 for d in $(SRC_DIRS) vendor; do \
-	     test -d $$d && DIRS+=("./$$d/..."); \
-	 done; \
-	 ./bin/tools/go-licenses save "$${DIRS[@]}" --save_path=$(LICENSES)
+	@./bin/tools/go-licenses save ./... --save_path=$(LICENSES)
 	@chmod -R a+rx $(LICENSES)
 
 CONTAINER_DOTFILES = $(foreach bin,$(BINS),.container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG))
@@ -278,7 +271,7 @@ test: $(BUILD_DIRS)
 	        OS=$(OS)                                            \
 	        VERSION=$(VERSION)                                  \
 	        MOD=$(MOD)                                          \
-	        ./build/test.sh $(foreach d,$(SRC_DIRS),./$d/...)   \
+	        ./build/test.sh ./...                               \
 	    "
 
 $(BUILD_DIRS):
