@@ -1,3 +1,4 @@
+// +build never
 /*
 Copyright 2021 The Kubernetes Authors.
 
