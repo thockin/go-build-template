@@ -15,7 +15,13 @@
 # The binaries to build (just the basenames)
 BINS := myapp-1 myapp-2
 
-# Where to push the docker image.
+# Directories which hold app source (not vendored)
+SRC_DIRS := cmd pkg
+
+# The platforms we support.
+ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x windows/amd64
+
+# Where to push the docker images.
 REGISTRY ?= example.com
 
 # This version-strategy uses git tags to set the version string
@@ -31,10 +37,6 @@ MOD ?= mod
 ### These variables should not need tweaking.
 ###
 
-SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
-
-ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x windows/amd64
-
 # Used internally.  Users should pass GOOS and/or GOARCH.
 OS := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
@@ -49,6 +51,9 @@ BIN_EXTENSION :=
 ifeq ($(OS), windows)
   BIN_EXTENSION := .exe
 endif
+
+# It's necessary to set this because some environments don't link sh -> bash.
+SHELL := /usr/bin/env bash
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
