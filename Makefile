@@ -188,6 +188,8 @@ $(LICENSES): $(BUILD_DIRS)
 
 CONTAINER_DOTFILES = $(foreach bin,$(BINS),.container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG))
 
+# We print the container names here, rather than in CONTAINER_DOTFILES so
+# they are always at the end of the output.
 container containers: # @HELP builds containers for one platform ($OS/$ARCH)
 container containers: $(CONTAINER_DOTFILES)
 	@for bin in $(BINS); do              \
