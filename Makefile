@@ -225,8 +225,15 @@ push: container
 	    docker push $(REGISTRY)/$$bin:$(TAG);  \
 	done
 
+# This depends on github.com/estesp/manifest-tool@v1.0.3, but that repo doesn't
+# properly support modules, so you'll have to install it yourself.
 manifest-list: # @HELP builds a manifest list of containers for all platforms
 manifest-list: all-push
+	@if ! which manifest-tool >/dev/null 2>&1; then                      \
+	    echo "can't find manifest-tool in PATH";                       \
+	    echo "please install github.com/estesp/manifest-tool@v1.0.3";  \
+	    false;                                                         \
+	fi
 	@for bin in $(BINS); do                                   \
 	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
 	    manifest-tool                                         \
@@ -235,7 +242,8 @@ manifest-list: all-push
 	        push from-args                                    \
 	        --platforms "$$platforms"                         \
 	        --template $(REGISTRY)/$$bin:$(VERSION)__OS_ARCH  \
-	        --target $(REGISTRY)/$$bin:$(VERSION)
+	        --target $(REGISTRY)/$$bin:$(VERSION);            \
+	done
 
 version: # @HELP outputs the version string
 version:
