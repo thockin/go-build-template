@@ -94,10 +94,11 @@ OUTBINS = $(foreach bin,$(BINS),bin/$(OS)_$(ARCH)/$(bin)$(BIN_EXTENSION))
 build: $(OUTBINS)
 
 # Directories that we need created to build/test.
-BUILD_DIRS := bin/$(OS)_$(ARCH)     \
-              bin/tools             \
-              .go/bin/$(OS)_$(ARCH) \
-              .go/cache             \
+BUILD_DIRS := bin/$(OS)_$(ARCH)                   \
+              bin/tools                           \
+              .go/bin/$(OS)_$(ARCH)               \
+              .go/bin/$(OS)_$(ARCH)/$(OS)_$(ARCH) \
+              .go/cache                           \
               .go/pkg
 
 # Each outbin target is just a facade for the respective stampfile target.
