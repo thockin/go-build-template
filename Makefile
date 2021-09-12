@@ -268,6 +268,7 @@ container-clean:
 	rm -rf .container-* .dockerfile-* .push-* $(LICENSES)
 
 bin-clean:
+	@test -d .go && chmod -R u+w .go || true
 	rm -rf .go bin
 
 help: # @HELP prints this message
