@@ -175,7 +175,9 @@ shell: $(BUILD_DIRS)
 LICENSES = .licenses
 
 $(LICENSES): $(BUILD_DIRS)
-	@go build -o ./bin/tools github.com/google/go-licenses
+	@pushd tools >/dev/null;                                  \
+	 go build -o ../bin/tools github.com/google/go-licenses;  \
+	 popd >/dev/null
 	@rm -rf $(LICENSES)
 	@DIRS=(); \
 	 for d in $(SRC_DIRS) vendor; do \
