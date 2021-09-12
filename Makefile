@@ -92,6 +92,7 @@ all-push: $(addprefix push-, $(subst /,_, $(ALL_PLATFORMS)))
 OUTBINS = $(foreach bin,$(BINS),bin/$(OS)_$(ARCH)/$(bin)$(BIN_EXTENSION))
 
 build: $(OUTBINS)
+	@echo
 
 # Directories that we need created to build/test.
 BUILD_DIRS := bin/$(OS)_$(ARCH)                   \
@@ -127,7 +128,6 @@ $(STAMPS): go-build
 	else                                        \
 	    echo "  (cached)";                      \
 	fi
-	@echo
 
 # This runs the actual `go build` which updates all binaries.
 go-build: $(BUILD_DIRS)
@@ -181,7 +181,6 @@ $(LICENSES): $(BUILD_DIRS)
 	 for d in $(SRC_DIRS) vendor; do \
 	     test -d $$d && DIRS+=("./$$d/..."); \
 	 done; \
-	 echo "saving licenses for $${DIRS[@]}"; \
 	 ./bin/tools/go-licenses save "$${DIRS[@]}" --save_path=$(LICENSES)
 	@chmod -R a+rx $(LICENSES)
 
@@ -205,6 +204,7 @@ $(foreach bin,$(BINS),$(eval                                         \
 # This is the target definition for all container-dotfiles.
 # These are used to track build state in hidden files.
 $(CONTAINER_DOTFILES):
+	@echo
 	@sed                                          \
 	    -e 's|{ARG_BIN}|$(BIN)$(BIN_EXTENSION)|g' \
 	    -e 's|{ARG_ARCH}|$(ARCH)|g'               \
