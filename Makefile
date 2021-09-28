@@ -132,7 +132,7 @@ $(STAMPS): go-build
 	fi
 
 # This runs the actual `go build` which updates all binaries.
-go-build: $(BUILD_DIRS)
+go-build: | $(BUILD_DIRS)
 	@echo "# building for $(OS)/$(ARCH)"
 	@docker run                                                 \
 	    -i                                                      \
@@ -157,7 +157,7 @@ go-build: $(BUILD_DIRS)
 
 # Example: make shell CMD="-c 'date > datefile'"
 shell: # @HELP launches a shell in the containerized build environment
-shell: $(BUILD_DIRS)
+shell: | $(BUILD_DIRS)
 	@echo "# launching a shell in the containerized build environment"
 	@docker run                                                 \
 	    -ti                                                     \
@@ -176,9 +176,11 @@ shell: $(BUILD_DIRS)
 
 LICENSES = .licenses
 
-$(LICENSES): $(BUILD_DIRS)
-	@pushd tools >/dev/null;                                  \
-	 go build -o ../bin/tools github.com/google/go-licenses;  \
+$(LICENSES): | $(BUILD_DIRS)
+	@pushd tools >/dev/null;                    \
+	 unset GOOS; unset GOARCH;                  \
+	 export GOBIN=$$(pwd)/../bin/tools;         \
+	 go install github.com/google/go-licenses;  \
 	 popd >/dev/null
 	@rm -rf $(LICENSES)
 	@./bin/tools/go-licenses save ./... --save_path=$(LICENSES)
@@ -226,16 +228,16 @@ push: container
 	@for bin in $(BINS); do                    \
 	    docker push $(REGISTRY)/$$bin:$(TAG);  \
 	done
+	@echo
 
 # This depends on github.com/estesp/manifest-tool@v1.0.3, but that repo doesn't
 # properly support modules, so you'll have to install it yourself.
 manifest-list: # @HELP builds a manifest list of containers for all platforms
 manifest-list: all-push
-	@if ! which manifest-tool >/dev/null 2>&1; then                      \
-	    echo "can't find manifest-tool in PATH";                       \
-	    echo "please install github.com/estesp/manifest-tool@v1.0.3";  \
-	    false;                                                         \
-	fi
+	@pushd tools >/dev/null;                                           \
+	 export GOBIN=$$(pwd)/../bin/tools;                                \
+	 go install github.com/estesp/manifest-tool/v2/cmd/manifest-tool;  \
+	 popd >/dev/null
 	@for bin in $(BINS); do                                   \
 	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
 	    manifest-tool                                         \
@@ -252,7 +254,7 @@ version:
 	@echo $(VERSION)
 
 test: # @HELP runs tests, as defined in ./build/test.sh
-test: $(BUILD_DIRS)
+test: | $(BUILD_DIRS)
 	@docker run                                                 \
 	    -i                                                      \
 	    --rm                                                    \
