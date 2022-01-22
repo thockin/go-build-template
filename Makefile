@@ -12,6 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+DBG_MAKEFILE ?=
+ifeq ($(DBG_MAKEFILE),1)
+    $(warning ***** starting Makefile for goal(s) "$(MAKECMDGOALS)")
+    $(warning ***** $(shell date))
+else
+    # If we're not debugging the Makefile, don't echo recipes.
+    MAKEFLAGS += -s
+endif
+
+# We don't need make's built-in rules.
+MAKEFLAGS += --no-builtin-rules
+# Be pedantic about undefined variables.
+MAKEFLAGS += --warn-undefined-variables
+.SUFFIXES:
+
 # The binaries to build (just the basenames)
 BINS := myapp-1 myapp-2
 
@@ -29,6 +44,10 @@ VERSION ?= $(shell git describe --tags --always --dirty)
 
 # Which Go modules mode to use ("mod" or "vendor")
 MOD ?= mod
+
+# Satisfy --warn-undefined-variables.
+HTTP_PROXY ?=
+HTTPS_PROXY ?=
 
 ###
 ### These variables should not need tweaking.
@@ -62,19 +81,19 @@ all: build
 # because make pattern rules don't match with embedded '/' characters.
 
 build-%:
-	@$(MAKE) build                        \
+	$(MAKE) build                         \
 	    --no-print-directory              \
 	    GOOS=$(firstword $(subst _, ,$*)) \
 	    GOARCH=$(lastword $(subst _, ,$*))
 
 container-%:
-	@$(MAKE) container                    \
+	$(MAKE) container                     \
 	    --no-print-directory              \
 	    GOOS=$(firstword $(subst _, ,$*)) \
 	    GOARCH=$(lastword $(subst _, ,$*))
 
 push-%:
-	@$(MAKE) push                         \
+	$(MAKE) push                          \
 	    --no-print-directory              \
 	    GOOS=$(firstword $(subst _, ,$*)) \
 	    GOARCH=$(lastword $(subst _, ,$*))
@@ -94,7 +113,7 @@ all-push: $(addprefix push-, $(subst /,_, $(ALL_PLATFORMS)))
 OUTBINS = $(foreach bin,$(BINS),bin/$(OS)_$(ARCH)/$(bin)$(BIN_EXTENSION))
 
 build: $(OUTBINS)
-	@echo
+	echo
 
 # Directories that we need created to build/test.
 BUILD_DIRS := bin/$(OS)_$(ARCH)                   \
@@ -111,7 +130,7 @@ $(foreach outbin,$(OUTBINS),$(eval  \
 ))
 # This is the target definition for all outbins.
 $(OUTBINS):
-	@true
+	true
 
 # Each stampfile target can reference an $(OUTBIN) variable.
 $(foreach outbin,$(OUTBINS),$(eval $(strip   \
@@ -122,19 +141,19 @@ $(foreach outbin,$(OUTBINS),$(eval $(strip   \
 STAMPS = $(foreach outbin,$(OUTBINS),.go/$(outbin).stamp)
 .PHONY: $(STAMPS)
 $(STAMPS): go-build
-	@echo -ne "binary: $(OUTBIN)"
-	@if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then  \
-	    mv .go/$(OUTBIN) $(OUTBIN);             \
-	    date >$@;                               \
-	    echo;                                   \
-	else                                        \
-	    echo "  (cached)";                      \
+	echo -ne "binary: $(OUTBIN)"
+	if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then  \
+	    mv .go/$(OUTBIN) $(OUTBIN);            \
+	    date >$@;                              \
+	    echo;                                  \
+	else                                       \
+	    echo "  (cached)";                     \
 	fi
 
 # This runs the actual `go build` which updates all binaries.
 go-build: | $(BUILD_DIRS)
-	@echo "# building for $(OS)/$(ARCH)"
-	@docker run                                                 \
+	echo "# building for $(OS)/$(ARCH)"
+	docker run                                                  \
 	    -i                                                      \
 	    --rm                                                    \
 	    -u $$(id -u):$$(id -g)                                  \
@@ -158,8 +177,8 @@ go-build: | $(BUILD_DIRS)
 # Example: make shell CMD="-c 'date > datefile'"
 shell: # @HELP launches a shell in the containerized build environment
 shell: | $(BUILD_DIRS)
-	@echo "# launching a shell in the containerized build environment"
-	@docker run                                                 \
+	echo "# launching a shell in the containerized build environment"
+	docker run                                                  \
 	    -ti                                                     \
 	    --rm                                                    \
 	    -u $$(id -u):$$(id -g)                                  \
@@ -177,14 +196,14 @@ shell: | $(BUILD_DIRS)
 LICENSES = .licenses
 
 $(LICENSES): | $(BUILD_DIRS)
-	@pushd tools >/dev/null;                    \
+	pushd tools >/dev/null;                     \
 	 unset GOOS; unset GOARCH;                  \
 	 export GOBIN=$$(pwd)/../bin/tools;         \
 	 go install github.com/google/go-licenses;  \
 	 popd >/dev/null
-	@rm -rf $(LICENSES)
-	@./bin/tools/go-licenses save ./... --save_path=$(LICENSES)
-	@chmod -R a+rx $(LICENSES)
+	rm -rf $(LICENSES)
+	./bin/tools/go-licenses save ./... --save_path=$(LICENSES)
+	chmod -R a+rx $(LICENSES)
 
 CONTAINER_DOTFILES = $(foreach bin,$(BINS),.container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG))
 
@@ -192,10 +211,10 @@ CONTAINER_DOTFILES = $(foreach bin,$(BINS),.container-$(subst /,_,$(REGISTRY)/$(
 # they are always at the end of the output.
 container containers: # @HELP builds containers for one platform ($OS/$ARCH)
 container containers: $(CONTAINER_DOTFILES)
-	@for bin in $(BINS); do              \
-	    echo "container: $(REGISTRY)/$$bin:$(TAG)"; \
+	for bin in $(BINS); do                           \
+	    echo "container: $(REGISTRY)/$$bin:$(TAG)";  \
 	done
-	@echo
+	echo
 
 # Each container-dotfile target can reference a $(BIN) variable.
 # This is done in 2 steps to enable target-specific variables.
@@ -208,37 +227,37 @@ $(foreach bin,$(BINS),$(eval                                         \
 # This is the target definition for all container-dotfiles.
 # These are used to track build state in hidden files.
 $(CONTAINER_DOTFILES):
-	@echo
-	@sed                                          \
-	    -e 's|{ARG_BIN}|$(BIN)$(BIN_EXTENSION)|g' \
-	    -e 's|{ARG_ARCH}|$(ARCH)|g'               \
-	    -e 's|{ARG_OS}|$(OS)|g'                   \
-	    -e 's|{ARG_FROM}|$(BASEIMAGE)|g'          \
+	echo
+	sed                                            \
+	    -e 's|{ARG_BIN}|$(BIN)$(BIN_EXTENSION)|g'  \
+	    -e 's|{ARG_ARCH}|$(ARCH)|g'                \
+	    -e 's|{ARG_OS}|$(OS)|g'                    \
+	    -e 's|{ARG_FROM}|$(BASEIMAGE)|g'           \
 	    Dockerfile.in > .dockerfile-$(BIN)-$(OS)_$(ARCH)
-	@docker build                           \
-	    --no-cache                          \
-	    -t $(REGISTRY)/$(BIN):$(TAG)        \
-	    -f .dockerfile-$(BIN)-$(OS)_$(ARCH) \
+	docker build                             \
+	    --no-cache                           \
+	    -t $(REGISTRY)/$(BIN):$(TAG)         \
+	    -f .dockerfile-$(BIN)-$(OS)_$(ARCH)  \
 	    .
-	@docker images -q $(REGISTRY)/$(BIN):$(TAG) > $@
-	@echo
+	docker images -q $(REGISTRY)/$(BIN):$(TAG) > $@
+	echo
 
 push: # @HELP pushes the container for one platform ($OS/$ARCH) to the defined registry
 push: container
-	@for bin in $(BINS); do                    \
+	for bin in $(BINS); do                     \
 	    docker push $(REGISTRY)/$$bin:$(TAG);  \
 	done
-	@echo
+	echo
 
 # This depends on github.com/estesp/manifest-tool@v1.0.3, but that repo doesn't
 # properly support modules, so you'll have to install it yourself.
 manifest-list: # @HELP builds a manifest list of containers for all platforms
 manifest-list: all-push
-	@pushd tools >/dev/null;                                           \
+	pushd tools >/dev/null;                                            \
 	 export GOBIN=$$(pwd)/../bin/tools;                                \
 	 go install github.com/estesp/manifest-tool/v2/cmd/manifest-tool;  \
 	 popd >/dev/null
-	@for bin in $(BINS); do                                   \
+	for bin in $(BINS); do                                    \
 	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
 	    manifest-tool                                         \
 	        --username=oauth2accesstoken                      \
@@ -251,11 +270,11 @@ manifest-list: all-push
 
 version: # @HELP outputs the version string
 version:
-	@echo $(VERSION)
+	echo $(VERSION)
 
 test: # @HELP runs tests, as defined in ./build/test.sh
 test: | $(BUILD_DIRS)
-	@docker run                                                 \
+	docker run                                                  \
 	    -i                                                      \
 	    --rm                                                    \
 	    -u $$(id -u):$$(id -g)                                  \
@@ -277,7 +296,7 @@ test: | $(BUILD_DIRS)
 	    "
 
 $(BUILD_DIRS):
-	@mkdir -p $@
+	mkdir -p $@
 
 clean: # @HELP removes built binaries and temporary files
 clean: container-clean bin-clean
@@ -286,20 +305,20 @@ container-clean:
 	rm -rf .container-* .dockerfile-* .push-* $(LICENSES)
 
 bin-clean:
-	@test -d .go && chmod -R u+w .go || true
+	test -d .go && chmod -R u+w .go || true
 	rm -rf .go bin
 
 help: # @HELP prints this message
 help:
-	@echo "VARIABLES:"
-	@echo "  BINS = $(BINS)"
-	@echo "  OS = $(OS)"
-	@echo "  ARCH = $(ARCH)"
-	@echo "  MOD = $(MOD)"
-	@echo "  REGISTRY = $(REGISTRY)"
-	@echo
-	@echo "TARGETS:"
-	@grep -E '^.*: *# *@HELP' $(MAKEFILE_LIST)    \
+	echo "VARIABLES:"
+	echo "  BINS = $(BINS)"
+	echo "  OS = $(OS)"
+	echo "  ARCH = $(ARCH)"
+	echo "  MOD = $(MOD)"
+	echo "  REGISTRY = $(REGISTRY)"
+	echo
+	echo "TARGETS:"
+	grep -E '^.*: *# *@HELP' $(MAKEFILE_LIST)     \
 	    | awk '                                   \
 	        BEGIN {FS = ": *# *@HELP"};           \
 	        { printf "  %-30s %s\n", $$1, $$2 };  \
