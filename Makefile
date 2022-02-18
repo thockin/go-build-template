@@ -46,6 +46,7 @@ VERSION ?= $(shell git describe --tags --always --dirty)
 MOD ?= mod
 
 # Satisfy --warn-undefined-variables.
+GOFLAGS ?=
 HTTP_PROXY ?=
 HTTPS_PROXY ?=
 
@@ -69,7 +70,7 @@ ifeq ($(OS), windows)
 endif
 
 # It's necessary to set this because some environments don't link sh -> bash.
-SHELL := /usr/bin/env bash
+SHELL := /usr/bin/env bash -o errexit -o pipefail -o nounset
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
@@ -141,13 +142,13 @@ $(foreach outbin,$(OUTBINS),$(eval $(strip   \
 STAMPS = $(foreach outbin,$(OUTBINS),.go/$(outbin).stamp)
 .PHONY: $(STAMPS)
 $(STAMPS): go-build
-	echo -ne "binary: $(OUTBIN)"
+	echo -ne "binary: $(OUTBIN)  "
 	if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then  \
 	    mv .go/$(OUTBIN) $(OUTBIN);            \
 	    date >$@;                              \
 	    echo;                                  \
 	else                                       \
-	    echo "  (cached)";                     \
+	    echo "(cached)";                       \
 	fi
 
 # This runs the actual `go build` which updates all binaries.
@@ -171,6 +172,7 @@ go-build: | $(BUILD_DIRS)
 	        OS=$(OS)                                            \
 	        VERSION=$(VERSION)                                  \
 	        MOD=$(MOD)                                          \
+	        GOFLAGS=$(GOFLAGS)                                  \
 	        ./build/build.sh ./...                              \
 	    "
 
@@ -292,6 +294,7 @@ test: | $(BUILD_DIRS)
 	        OS=$(OS)                                            \
 	        VERSION=$(VERSION)                                  \
 	        MOD=$(MOD)                                          \
+	        GOFLAGS=$(GOFLAGS)                                  \
 	        ./build/test.sh ./...                               \
 	    "
 
@@ -315,6 +318,7 @@ help:
 	echo "  OS = $(OS)"
 	echo "  ARCH = $(ARCH)"
 	echo "  MOD = $(MOD)"
+	echo "  GOFLAGS = $(GOFLAGS)"
 	echo "  REGISTRY = $(REGISTRY)"
 	echo
 	echo "TARGETS:"
