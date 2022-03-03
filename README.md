@@ -15,7 +15,6 @@ Makefile:
    - change `BINS` to your binary name(s)
    - replace `cmd/myapp-*` with one directory for each of your `BINS`
    - change `REGISTRY` to the Docker registry you want to use
-   - maybe change `SRC_DIRS` if you use some other layout
    - choose a strategy for `VERSION` values - git tags or manual
 
 Dockerfile.in:
