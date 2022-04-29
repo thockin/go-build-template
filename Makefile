@@ -251,8 +251,7 @@ push: container
 	done
 	echo
 
-# This depends on github.com/estesp/manifest-tool@v1.0.3, but that repo doesn't
-# properly support modules, so you'll have to install it yourself.
+# This depends on github.com/estesp/manifest-tool.
 manifest-list: # @HELP builds a manifest list of containers for all platforms
 manifest-list: all-push
 	pushd tools >/dev/null;                                            \
@@ -261,7 +260,7 @@ manifest-list: all-push
 	 popd >/dev/null
 	for bin in $(BINS); do                                    \
 	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
-	    manifest-tool                                         \
+	    bin/tools/manifest-tool                               \
 	        --username=oauth2accesstoken                      \
 	        --password=$$(gcloud auth print-access-token)     \
 	        push from-args                                    \
