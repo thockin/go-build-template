@@ -9,4 +9,5 @@ steps:
     args:
       - test
       - all-container
+      - DBG_MAKEFILE=1
 timeout: 300s
