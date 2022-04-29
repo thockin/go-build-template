@@ -198,11 +198,11 @@ shell: | $(BUILD_DIRS)
 LICENSES = .licenses
 
 $(LICENSES): | $(BUILD_DIRS)
-	pushd tools >/dev/null;                     \
-	 unset GOOS; unset GOARCH;                  \
-	 export GOBIN=$$(pwd)/../bin/tools;         \
-	 go install github.com/google/go-licenses;  \
-	 popd >/dev/null
+	pushd tools >/dev/null;                      \
+	  unset GOOS; unset GOARCH;                  \
+	  export GOBIN=$$(pwd)/../bin/tools;         \
+	  go install github.com/google/go-licenses;  \
+	  popd >/dev/null
 	rm -rf $(LICENSES)
 	./bin/tools/go-licenses save ./... --save_path=$(LICENSES)
 	chmod -R a+rx $(LICENSES)
