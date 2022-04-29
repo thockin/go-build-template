@@ -62,7 +62,7 @@ BASEIMAGE ?= gcr.io/distroless/static
 
 TAG := $(VERSION)__$(OS)_$(ARCH)
 
-BUILD_IMAGE ?= golang:1.16-alpine
+BUILD_IMAGE ?= golang:1.17-alpine
 
 BIN_EXTENSION :=
 ifeq ($(OS), windows)
@@ -254,10 +254,10 @@ push: container
 # This depends on github.com/estesp/manifest-tool.
 manifest-list: # @HELP builds a manifest list of containers for all platforms
 manifest-list: all-push
-	pushd tools >/dev/null;                                            \
-	 export GOBIN=$$(pwd)/../bin/tools;                                \
-	 go install github.com/estesp/manifest-tool/v2/cmd/manifest-tool;  \
-	 popd >/dev/null
+	pushd tools >/dev/null;                                             \
+	  export GOBIN=$$(pwd)/../bin/tools;                                \
+	  go install github.com/estesp/manifest-tool/v2/cmd/manifest-tool;  \
+	  popd >/dev/null
 	for bin in $(BINS); do                                    \
 	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
 	    bin/tools/manifest-tool                               \
