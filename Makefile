@@ -297,6 +297,25 @@ test: | $(BUILD_DIRS)
 	        ./build/test.sh ./...                               \
 	    "
 
+lint: # @HELP runs golangci-lint
+lint: | $(BUILD_DIRS)
+	docker run                                                  \
+	    -i                                                      \
+	    --rm                                                    \
+	    -u $$(id -u):$$(id -g)                                  \
+	    -v $$(pwd):/src                                         \
+	    -w /src                                                 \
+	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
+	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
+	    -v $$(pwd)/.go/cache:/.cache                            \
+	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
+	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
+	    $(BUILD_IMAGE)                                          \
+	    /bin/sh -c "                                            \
+	        ./build/lint.sh ./...                               \
+	    "
+
 $(BUILD_DIRS):
 	mkdir -p $@
 

@@ -1,4 +1,6 @@
+//go:build never
 // +build never
+
 /*
 Copyright 2021 The Kubernetes Authors.
 
@@ -21,5 +23,6 @@ package tools
 
 import (
 	_ "github.com/estesp/manifest-tool/v2/cmd/manifest-tool"
+	_ "github.com/golangci/golangci-lint"
 	_ "github.com/google/go-licenses"
 )

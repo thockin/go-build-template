@@ -7,6 +7,7 @@ steps:
       - GOARCH="fake" # even if it won't need them
       - VERSION=$SHORT_SHA
     args:
+      - lint
       - test
       - all-container
       - DBG_MAKEFILE=1

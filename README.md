@@ -22,17 +22,21 @@ Dockerfile.in:
 
 ## Go Modules
 
-This assumes the use of go modules (which will be the default for all Go builds
-as of Go 1.13) and vendoring (which reasonable minds might disagree about).
-You will need to run `go mod vendor` to create a `vendor` directory when you
-have dependencies.
+This assumes the use of go modules (which is the default for all Go builds
+as of Go 1.13).
+
+## Dependencies
+
+This includes go-licenses and golangci-lint, but they are kept in the `tools`
+sub-module.  If you don't want those (or their dependencies, they can be
+removed.
 
 ## Building
 
-Run `make` or `make build` to compile your app.  This will use a Docker image
-to build your app, with the current directory volume-mounted into place.  This
-will store incremental state for the fastest possible build.  Run `make
-all-build` to build for all architectures.
+Run `make` or `make build` to compile your app.  This will use docker to build
+your app, with the current directory volume-mounted into place.  This will
+store incremental state for the fastest possible build.  Run `make all-build`
+to build for all architectures.
 
 Run `make container` to build the container image.  It will calculate the image
 tag based on the most recent git tag, and whether the repo is "dirty" since
@@ -45,3 +49,11 @@ to push the container images for all architectures.
 Run `make clean` to clean up.
 
 Run `make help` to get a list of available targets.
+
+## Testing
+
+Run `make test` and `make lint` to run tests and linters, respectively.  Like
+building, this will use docker to execute.
+
+The golangci-lint tool looks for configuration in `.golangci.yaml`.  If that
+file is not provided, it will use its own built-in defaults.
