@@ -8,12 +8,6 @@ require (
 	github.com/google/go-licenses v1.2.1
 )
 
-replace (
-	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible // for manifest-tool
-	github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // for manifest-tool
-	github.com/urfave/cli => github.com/urfave/cli v1.22.1 // for manifest-tool
-)
-
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	github.com/Antonboom/errname v0.1.6 // indirect
@@ -107,7 +101,7 @@ require (
 	github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd // indirect
 	github.com/kisielk/errcheck v1.6.0 // indirect
 	github.com/kisielk/gotool v1.0.0 // indirect
-	github.com/klauspost/compress v1.11.13 // indirect
+	github.com/klauspost/compress v1.13.5 // indirect
 	github.com/kulti/thelper v0.6.2 // indirect
 	github.com/kunwardeep/paralleltest v1.0.3 // indirect
 	github.com/kyoh86/exportloopref v0.1.8 // indirect
@@ -214,4 +208,10 @@ require (
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
 	mvdan.cc/unparam v0.0.0-20211214103731-d0ef000c54e5 // indirect
+)
+
+replace (
+	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible // for manifest-tool
+	github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // for manifest-tool
+	github.com/urfave/cli => github.com/urfave/cli v1.22.1 // for manifest-tool
 )
