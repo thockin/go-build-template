@@ -21,12 +21,6 @@ else
     MAKEFLAGS += -s
 endif
 
-# We don't need make's built-in rules.
-MAKEFLAGS += --no-builtin-rules
-# Be pedantic about undefined variables.
-MAKEFLAGS += --warn-undefined-variables
-.SUFFIXES:
-
 # The binaries to build (just the basenames)
 BINS := myapp-1 myapp-2
 
@@ -45,14 +39,15 @@ VERSION ?= $(shell git describe --tags --always --dirty)
 # Which Go modules mode to use ("mod" or "vendor")
 MOD ?= mod
 
-# Satisfy --warn-undefined-variables.
-GOFLAGS ?=
-HTTP_PROXY ?=
-HTTPS_PROXY ?=
-
 ###
 ### These variables should not need tweaking.
 ###
+
+# We don't need make's built-in rules.
+MAKEFLAGS += --no-builtin-rules
+# Be pedantic about undefined variables.
+MAKEFLAGS += --warn-undefined-variables
+.SUFFIXES:
 
 # Used internally.  Users should pass GOOS and/or GOARCH.
 OS := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
@@ -71,6 +66,11 @@ endif
 
 # It's necessary to set this because some environments don't link sh -> bash.
 SHELL := /usr/bin/env bash -o errexit -o pipefail -o nounset
+
+# Satisfy --warn-undefined-variables.
+GOFLAGS ?=
+HTTP_PROXY ?=
+HTTPS_PROXY ?=
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
