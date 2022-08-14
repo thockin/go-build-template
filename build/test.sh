@@ -20,9 +20,6 @@ set -o pipefail
 
 export CGO_ENABLED=0
 export GO111MODULE=on
-if [ -n "${MOD}" ]; then
-    export GOFLAGS="${GOFLAGS:-} -mod=${MOD}"
-fi
 
 echo "Running tests:"
 go test -installsuffix "static" "$@"

@@ -35,9 +35,6 @@ export CGO_ENABLED=0
 export GOARCH="${ARCH}"
 export GOOS="${OS}"
 export GO111MODULE=on
-if [ -n "${MOD}" ]; then
-    export GOFLAGS="${GOFLAGS:-} -mod=${MOD}"
-fi
 
 if [[ "${DEBUG:-}" == 1 ]]; then
     # Debugging - disable optimizations and inlining

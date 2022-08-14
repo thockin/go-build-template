@@ -20,7 +20,6 @@ set -o pipefail
 
 export CGO_ENABLED=0
 export GO111MODULE=on
-export GOFLAGS="${GOFLAGS:-}"
 
 cd tools >/dev/null
 go install github.com/golangci/golangci-lint/cmd/golangci-lint

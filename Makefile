@@ -39,10 +39,6 @@ VERSION ?= $(shell git describe --tags --always --dirty)
 # Set this to 1 to build a debugger-friendly binary.
 DBG ?=
 
-# Which Go modules mode to use (e.g. "mod" or "vendor" or nothing for Go's
-# default)
-MOD ?=
-
 ###
 ### These variables should not need tweaking.
 ###
@@ -172,7 +168,6 @@ go-build: | $(BUILD_DIRS)
 	    --env OS=$(OS)                                          \
 	    --env VERSION=$(VERSION)                                \
 	    --env DEBUG=$(DBG)                                      \
-	    --env MOD=$(MOD)                                        \
 	    --env GOFLAGS=$(GOFLAGS)                                \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
@@ -197,7 +192,6 @@ shell: | $(BUILD_DIRS)
 	    --env OS=$(OS)                                          \
 	    --env VERSION=$(VERSION)                                \
 	    --env DEBUG=$(DBG)                                      \
-	    --env MOD=$(MOD)                                        \
 	    --env GOFLAGS=$(GOFLAGS)                                \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
@@ -298,7 +292,6 @@ test: | $(BUILD_DIRS)
 	    --env OS=$(OS)                                          \
 	    --env VERSION=$(VERSION)                                \
 	    --env DEBUG=$(DBG)                                      \
-	    --env MOD=$(MOD)                                        \
 	    --env GOFLAGS=$(GOFLAGS)                                \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
@@ -321,7 +314,6 @@ lint: | $(BUILD_DIRS)
 	    --env OS=$(OS)                                          \
 	    --env VERSION=$(VERSION)                                \
 	    --env DEBUG=$(DBG)                                      \
-	    --env MOD=$(MOD)                                        \
 	    --env GOFLAGS=$(GOFLAGS)                                \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
@@ -347,7 +339,7 @@ help:
 	echo "  BINS = $(BINS)"
 	echo "  OS = $(OS)"
 	echo "  ARCH = $(ARCH)"
-	echo "  MOD = $(MOD)"
+	echo "  DBG = $(DBG)"
 	echo "  GOFLAGS = $(GOFLAGS)"
 	echo "  REGISTRY = $(REGISTRY)"
 	echo
