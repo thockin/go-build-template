@@ -36,8 +36,12 @@ VERSION ?= $(shell git describe --tags --always --dirty)
 # This version-strategy uses a manual value to set the version string
 #VERSION ?= 1.2.3
 
-# Which Go modules mode to use ("mod" or "vendor")
-MOD ?= mod
+# Set this to 1 to build a debugger-friendly binary.
+DBG ?=
+
+# Which Go modules mode to use (e.g. "mod" or "vendor" or nothing for Go's
+# default)
+MOD ?=
 
 ###
 ### These variables should not need tweaking.
@@ -171,6 +175,7 @@ go-build: | $(BUILD_DIRS)
 	        ARCH=$(ARCH)                                        \
 	        OS=$(OS)                                            \
 	        VERSION=$(VERSION)                                  \
+	        DEBUG=$(DBG)                                        \
 	        MOD=$(MOD)                                          \
 	        GOFLAGS=$(GOFLAGS)                                  \
 	        ./build/build.sh ./...                              \

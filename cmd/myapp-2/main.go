@@ -16,8 +16,12 @@ limitations under the License.
 
 package main
 
-import "log"
+import (
+	"log"
+
+	"github.com/thockin/go-build-template/pkg/version"
+)
 
 func main() {
-	log.Printf("hello, world!")
+	log.Printf("version: %s\n", version.Version)
 }
