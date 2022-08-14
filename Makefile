@@ -22,10 +22,15 @@ else
 endif
 
 # The binaries to build (just the basenames)
-BINS := myapp-1 myapp-2
+BINS ?= myapp-1 myapp-2
 
-# The platforms we support.
-ALL_PLATFORMS := linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x windows/amd64
+# The platforms we support.  In theory this can be used for Windows platforms,
+# too, but they require specific base images, which we do not have.
+ALL_PLATFORMS ?= linux/amd64 linux/arm linux/arm64 linux/ppc64le linux/s390x
+
+# The "FROM" part of the Dockerfile.  This should be a manifest-list which
+# supports all of the platforms listed in ALL_PLATFORMS.
+BASE_IMAGE ?= gcr.io/distroless/static
 
 # Where to push the docker images.
 REGISTRY ?= example.com
@@ -36,7 +41,7 @@ VERSION ?= $(shell git describe --tags --always --dirty)
 # This version-strategy uses a manual value to set the version string
 #VERSION ?= 1.2.3
 
-# Set this to 1 to build a debugger-friendly binary.
+# Set this to 1 to build a debugger-friendly binaries.
 DBG ?=
 
 ###
@@ -53,11 +58,9 @@ MAKEFLAGS += --warn-undefined-variables
 OS := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 
-BASEIMAGE ?= gcr.io/distroless/static
-
 TAG := $(VERSION)__$(OS)_$(ARCH)
 
-BUILD_IMAGE ?= golang:1.19-alpine
+BUILD_IMAGE := golang:1.19-alpine
 
 BIN_EXTENSION :=
 ifeq ($(OS), windows)
@@ -237,12 +240,24 @@ $(CONTAINER_DOTFILES):
 	    -e 's|{ARG_BIN}|$(BIN)$(BIN_EXTENSION)|g'  \
 	    -e 's|{ARG_ARCH}|$(ARCH)|g'                \
 	    -e 's|{ARG_OS}|$(OS)|g'                    \
-	    -e 's|{ARG_FROM}|$(BASEIMAGE)|g'           \
+	    -e 's|{ARG_FROM}|$(BASE_IMAGE)|g'          \
 	    Dockerfile.in > .dockerfile-$(BIN)-$(OS)_$(ARCH)
-	docker build                             \
-	    --no-cache                           \
-	    -t $(REGISTRY)/$(BIN):$(TAG)         \
-	    -f .dockerfile-$(BIN)-$(OS)_$(ARCH)  \
+	HASH_LICENSES=$$(find $(LICENSES) -type f                       \
+		    | xargs md5sum | md5sum | cut -f1 -d' ');           \
+	HASH_BINARY=$$(md5sum bin/$(OS)_$(ARCH)/$(BIN)$(BIN_EXTENSION)  \
+		    | cut -f1 -d' ');                                   \
+	FORCE=0;                                                        \
+	docker buildx build                                             \
+	    --build-arg FORCE_REBUILD="$$FORCE"                         \
+	    --build-arg HASH_LICENSES="$$HASH_LICENSES"                 \
+	    --build-arg HASH_BINARY="$$HASH_BINARY"                     \
+	    --progress=plain                                            \
+	    --load                                                      \
+	    --platform "$(OS)/$(ARCH)"                                  \
+	    --build-arg HTTP_PROXY=$(HTTP_PROXY)                        \
+	    --build-arg HTTPS_PROXY=$(HTTPS_PROXY)                      \
+	    -t $(REGISTRY)/$(BIN):$(TAG)                                \
+	    -f .dockerfile-$(BIN)-$(OS)_$(ARCH)                         \
 	    .
 	docker images -q $(REGISTRY)/$(BIN):$(TAG) > $@
 	echo
