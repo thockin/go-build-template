@@ -168,18 +168,16 @@ go-build: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+	    --env ARCH=$(ARCH)                                      \
+	    --env OS=$(OS)                                          \
+	    --env VERSION=$(VERSION)                                \
+	    --env DEBUG=$(DBG)                                      \
+	    --env MOD=$(MOD)                                        \
+	    --env GOFLAGS=$(GOFLAGS)                                \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
 	    $(BUILD_IMAGE)                                          \
-	    /bin/sh -c "                                            \
-	        ARCH=$(ARCH)                                        \
-	        OS=$(OS)                                            \
-	        VERSION=$(VERSION)                                  \
-	        DEBUG=$(DBG)                                        \
-	        MOD=$(MOD)                                          \
-	        GOFLAGS=$(GOFLAGS)                                  \
-	        ./build/build.sh ./...                              \
-	    "
+	    ./build/build.sh ./...
 
 # Example: make shell CMD="-c 'date > datefile'"
 shell: # @HELP launches a shell in the containerized build environment
@@ -195,6 +193,12 @@ shell: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+	    --env ARCH=$(ARCH)                                      \
+	    --env OS=$(OS)                                          \
+	    --env VERSION=$(VERSION)                                \
+	    --env DEBUG=$(DBG)                                      \
+	    --env MOD=$(MOD)                                        \
+	    --env GOFLAGS=$(GOFLAGS)                                \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
 	    $(BUILD_IMAGE)                                          \
@@ -290,17 +294,16 @@ test: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+	    --env ARCH=$(ARCH)                                      \
+	    --env OS=$(OS)                                          \
+	    --env VERSION=$(VERSION)                                \
+	    --env DEBUG=$(DBG)                                      \
+	    --env MOD=$(MOD)                                        \
+	    --env GOFLAGS=$(GOFLAGS)                                \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
 	    $(BUILD_IMAGE)                                          \
-	    /bin/sh -c "                                            \
-	        ARCH=$(ARCH)                                        \
-	        OS=$(OS)                                            \
-	        VERSION=$(VERSION)                                  \
-	        MOD=$(MOD)                                          \
-	        GOFLAGS=$(GOFLAGS)                                  \
-	        ./build/test.sh ./...                               \
-	    "
+	    ./build/test.sh ./...
 
 lint: # @HELP runs golangci-lint
 lint: | $(BUILD_DIRS)
@@ -314,12 +317,16 @@ lint: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+	    --env ARCH=$(ARCH)                                      \
+	    --env OS=$(OS)                                          \
+	    --env VERSION=$(VERSION)                                \
+	    --env DEBUG=$(DBG)                                      \
+	    --env MOD=$(MOD)                                        \
+	    --env GOFLAGS=$(GOFLAGS)                                \
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
 	    $(BUILD_IMAGE)                                          \
-	    /bin/sh -c "                                            \
-	        ./build/lint.sh ./...                               \
-	    "
+	    ./build/lint.sh ./...
 
 $(BUILD_DIRS):
 	mkdir -p $@
