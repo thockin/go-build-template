@@ -70,6 +70,9 @@ endif
 # It's necessary to set this because some environments don't link sh -> bash.
 SHELL := /usr/bin/env bash -o errexit -o pipefail -o nounset
 
+# This is used in docker buildx commands
+BUILDX_NAME := $(shell basename $$(pwd))
+
 # Satisfy --warn-undefined-variables.
 GOFLAGS ?=
 HTTP_PROXY ?=
@@ -234,7 +237,7 @@ $(foreach bin,$(BINS),$(eval                                         \
 ))
 # This is the target definition for all container-dotfiles.
 # These are used to track build state in hidden files.
-$(CONTAINER_DOTFILES):
+$(CONTAINER_DOTFILES): .buildx-initialized
 	echo
 	sed                                            \
 	    -e 's|{ARG_BIN}|$(BIN)$(BIN_EXTENSION)|g'  \
@@ -248,6 +251,7 @@ $(CONTAINER_DOTFILES):
 		    | cut -f1 -d' ');                                   \
 	FORCE=0;                                                        \
 	docker buildx build                                             \
+	    --builder "$(BUILDX_NAME)"                                  \
 	    --build-arg FORCE_REBUILD="$$FORCE"                         \
 	    --build-arg HASH_LICENSES="$$HASH_LICENSES"                 \
 	    --build-arg HASH_BINARY="$$HASH_BINARY"                     \
@@ -342,7 +346,7 @@ clean: # @HELP removes built binaries and temporary files
 clean: container-clean bin-clean
 
 container-clean:
-	rm -rf .container-* .dockerfile-* .push-* $(LICENSES)
+	rm -rf .container-* .dockerfile-* .push-* .buildx-initialized $(LICENSES)
 
 bin-clean:
 	test -d .go && chmod -R u+w .go || true
@@ -364,3 +368,13 @@ help:
 	        BEGIN {FS = ": *# *@HELP"};           \
 	        { printf "  %-30s %s\n", $$1, $$2 };  \
 	    '
+
+# Help set up multi-arch build tools.  This assumes you have the tools
+# installed.  If you already have a buildx builder available, you don't need
+# this.  See https://medium.com/@artur.klauser/building-multi-architecture-docker-images-with-buildx-27d80f7e2408
+# for great context.
+.buildx-initialized:
+	docker buildx create --name "$(BUILDX_NAME)" --node "$(BUILDX_NAME)-0" >/dev/null
+	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes >/dev/null
+	date > $@
+
