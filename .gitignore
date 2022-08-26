@@ -5,3 +5,6 @@
 /.dockerfile-*
 /.licenses
 /.buildx-initialized
+
+# ide
+.vscode

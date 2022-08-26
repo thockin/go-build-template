@@ -170,6 +170,7 @@ go-build: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+		-v $${HOME}/.netrc:/.netrc                              \
 	    --env ARCH=$(ARCH)                                      \
 	    --env OS=$(OS)                                          \
 	    --env VERSION=$(VERSION)                                \
@@ -194,6 +195,7 @@ shell: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+		-v $${HOME}/.netrc:/.netrc                              \
 	    --env ARCH=$(ARCH)                                      \
 	    --env OS=$(OS)                                          \
 	    --env VERSION=$(VERSION)                                \
@@ -307,6 +309,7 @@ test: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+		-v $${HOME}/.netrc:/.netrc                              \
 	    --env ARCH=$(ARCH)                                      \
 	    --env OS=$(OS)                                          \
 	    --env VERSION=$(VERSION)                                \
@@ -329,6 +332,7 @@ lint: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+		-v $${HOME}/.netrc:/.netrc                              \
 	    --env ARCH=$(ARCH)                                      \
 	    --env OS=$(OS)                                          \
 	    --env VERSION=$(VERSION)                                \
