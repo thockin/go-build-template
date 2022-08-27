@@ -16,6 +16,11 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
       uses: actions/checkout@v2
+    - uses: extractions/netrc@v1
+        with:
+          machine: github.com
+          username: rzp
+          password: ${{ secrets.GIT_TOKEN }}
     - name: Build
       run: go build -v ./...
     - name: Test
