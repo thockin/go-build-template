@@ -170,13 +170,13 @@ go-build: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
-	    --env ARCH=$(ARCH)                                      \
-	    --env OS=$(OS)                                          \
-	    --env VERSION=$(VERSION)                                \
-	    --env DEBUG=$(DBG)                                      \
-	    --env GOFLAGS=$(GOFLAGS)                                \
-	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
-	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
+	    --env ARCH="$(ARCH)"                                    \
+	    --env OS="$(OS)"                                        \
+	    --env VERSION="$(VERSION)"                              \
+	    --env DEBUG="$(DBG)"                                    \
+	    --env GOFLAGS="$(GOFLAGS)"                              \
+	    --env HTTP_PROXY="$(HTTP_PROXY)"                        \
+	    --env HTTPS_PROXY="$(HTTPS_PROXY)"                      \
 	    $(BUILD_IMAGE)                                          \
 	    ./build/build.sh ./...
 
@@ -194,13 +194,13 @@ shell: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
-	    --env ARCH=$(ARCH)                                      \
-	    --env OS=$(OS)                                          \
-	    --env VERSION=$(VERSION)                                \
-	    --env DEBUG=$(DBG)                                      \
-	    --env GOFLAGS=$(GOFLAGS)                                \
-	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
-	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
+	    --env ARCH="$(ARCH)"                                    \
+	    --env OS="$(OS)"                                        \
+	    --env VERSION="$(VERSION)"                              \
+	    --env DEBUG="$(DBG)"                                    \
+	    --env GOFLAGS="$(GOFLAGS)"                              \
+	    --env HTTP_PROXY="$(HTTP_PROXY)"                        \
+	    --env HTTPS_PROXY="$(HTTPS_PROXY)"                      \
 	    $(BUILD_IMAGE)                                          \
 	    /bin/sh $(CMD)
 
@@ -258,8 +258,8 @@ $(CONTAINER_DOTFILES): .buildx-initialized
 	    --progress=plain                                            \
 	    --load                                                      \
 	    --platform "$(OS)/$(ARCH)"                                  \
-	    --build-arg HTTP_PROXY=$(HTTP_PROXY)                        \
-	    --build-arg HTTPS_PROXY=$(HTTPS_PROXY)                      \
+	    --build-arg HTTP_PROXY="$(HTTP_PROXY)"                      \
+	    --build-arg HTTPS_PROXY="$(HTTPS_PROXY)"                    \
 	    -t $(REGISTRY)/$(BIN):$(TAG)                                \
 	    -f .dockerfile-$(BIN)-$(OS)_$(ARCH)                         \
 	    .
@@ -307,13 +307,13 @@ test: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
-	    --env ARCH=$(ARCH)                                      \
-	    --env OS=$(OS)                                          \
-	    --env VERSION=$(VERSION)                                \
-	    --env DEBUG=$(DBG)                                      \
-	    --env GOFLAGS=$(GOFLAGS)                                \
-	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
-	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
+	    --env ARCH="$(ARCH)"                                    \
+	    --env OS="$(OS)"                                        \
+	    --env VERSION="$(VERSION)"                              \
+	    --env DEBUG="$(DBG)"                                    \
+	    --env GOFLAGS="$(GOFLAGS)"                              \
+	    --env HTTP_PROXY="$(HTTP_PROXY)"                        \
+	    --env HTTPS_PROXY="$(HTTPS_PROXY)"                      \
 	    $(BUILD_IMAGE)                                          \
 	    ./build/test.sh ./...
 
@@ -329,13 +329,13 @@ lint: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
 	    -v $$(pwd)/.go/pkg:/go/pkg                              \
-	    --env ARCH=$(ARCH)                                      \
-	    --env OS=$(OS)                                          \
-	    --env VERSION=$(VERSION)                                \
-	    --env DEBUG=$(DBG)                                      \
-	    --env GOFLAGS=$(GOFLAGS)                                \
-	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
-	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
+	    --env ARCH="$(ARCH)"                                    \
+	    --env OS="$(OS)"                                        \
+	    --env VERSION="$(VERSION)"                              \
+	    --env DEBUG="$(DBG)"                                    \
+	    --env GOFLAGS="$(GOFLAGS)"                              \
+	    --env HTTP_PROXY="$(HTTP_PROXY)"                        \
+	    --env HTTPS_PROXY="$(HTTPS_PROXY)"                      \
 	    $(BUILD_IMAGE)                                          \
 	    ./build/lint.sh ./...
 
