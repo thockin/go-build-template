@@ -208,13 +208,24 @@ shell: | $(BUILD_DIRS)
 LICENSES = .licenses
 
 $(LICENSES): | $(BUILD_DIRS)
-	pushd tools >/dev/null;                      \
-	  unset GOOS; unset GOARCH;                  \
-	  export GOBIN=$$(pwd)/../bin/tools;         \
-	  go install github.com/google/go-licenses;  \
-	  popd >/dev/null
+	docker run                              \
+	    -i                                  \
+	    --rm                                \
+	    -u $$(id -u):$$(id -g)              \
+	    -v $$(pwd)/tools:/src               \
+	    -w /src                             \
+	    -v $$(pwd)/bin/tools:/go/bin        \
+	    -v $$(pwd)/.go/cache:/.cache        \
+	    -v $$(pwd)/.go/pkg:/go/pkg          \
+	    --env CGO_ENABLED=0                 \
+	    --env HTTP_PROXY="$(HTTP_PROXY)"    \
+	    --env HTTPS_PROXY="$(HTTPS_PROXY)"  \
+	    $(BUILD_IMAGE)                      \
+	    go install github.com/google/go-licenses
 	rm -rf $(LICENSES)
-	./bin/tools/go-licenses save ./... --save_path=$(LICENSES)
+	# Work-around for https://github.com/google/go-licenses/issues/149.
+	GOROOT="$(shell go env GOROOT)" \
+	    bin/tools/go-licenses save ./... --save_path=$(LICENSES)
 	chmod -R a+rx $(LICENSES)
 
 CONTAINER_DOTFILES = $(foreach bin,$(BINS),.container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG))
@@ -277,10 +288,20 @@ push: container
 # This depends on github.com/estesp/manifest-tool.
 manifest-list: # @HELP builds a manifest list of containers for all platforms
 manifest-list: all-push
-	pushd tools >/dev/null;                                             \
-	  export GOBIN=$$(pwd)/../bin/tools;                                \
-	  go install github.com/estesp/manifest-tool/v2/cmd/manifest-tool;  \
-	  popd >/dev/null
+	docker run                              \
+	    -i                                  \
+	    --rm                                \
+	    -u $$(id -u):$$(id -g)              \
+	    -v $$(pwd)/tools:/src               \
+	    -w /src                             \
+	    -v $$(pwd)/bin/tools:/go/bin        \
+	    -v $$(pwd)/.go/cache:/.cache        \
+	    -v $$(pwd)/.go/pkg:/go/pkg          \
+	    --env CGO_ENABLED=0                 \
+	    --env HTTP_PROXY="$(HTTP_PROXY)"    \
+	    --env HTTPS_PROXY="$(HTTPS_PROXY)"  \
+	    $(BUILD_IMAGE)                      \
+	    go install github.com/estesp/manifest-tool/v2/cmd/manifest-tool
 	for bin in $(BINS); do                                    \
 	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
 	    bin/tools/manifest-tool                               \
