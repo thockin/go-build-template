@@ -13,4 +13,4 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Test
-      run: make test GOFLAGS="-v"
+      run: make test GOFLAGS="-v" GO_VERSION=${{ matrix.go-version }}
