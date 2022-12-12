@@ -79,6 +79,9 @@ GOFLAGS ?=
 HTTP_PROXY ?=
 HTTPS_PROXY ?=
 
+# Because we store the module cache locally.
+GOFLAGS := $(GOFLAGS) -modcacherw
+
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
 # If you want to build AND push all containers, see the 'all-push' rule.
@@ -128,8 +131,7 @@ BUILD_DIRS := bin/$(OS)_$(ARCH)                   \
               bin/tools                           \
               .go/bin/$(OS)_$(ARCH)               \
               .go/bin/$(OS)_$(ARCH)/$(OS)_$(ARCH) \
-              .go/cache                           \
-              .go/pkg
+              .go/cache
 
 # Each outbin target is just a facade for the respective stampfile target.
 # This `eval` establishes the dependencies for each.
@@ -170,7 +172,8 @@ go-build: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
-	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+	    --env GOCACHE="/.cache/gocache"                         \
+	    --env GOMODCACHE="/.cache/gomodcache"                   \
 	    --env ARCH="$(ARCH)"                                    \
 	    --env OS="$(OS)"                                        \
 	    --env VERSION="$(VERSION)"                              \
@@ -194,7 +197,8 @@ shell: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
-	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+	    --env GOCACHE="/.cache/gocache"                         \
+	    --env GOMODCACHE="/.cache/gomodcache"                   \
 	    --env ARCH="$(ARCH)"                                    \
 	    --env OS="$(OS)"                                        \
 	    --env VERSION="$(VERSION)"                              \
@@ -307,7 +311,8 @@ test: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
-	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+	    --env GOCACHE="/.cache/gocache"                         \
+	    --env GOMODCACHE="/.cache/gomodcache"                   \
 	    --env ARCH="$(ARCH)"                                    \
 	    --env OS="$(OS)"                                        \
 	    --env VERSION="$(VERSION)"                              \
@@ -329,7 +334,8 @@ lint: | $(BUILD_DIRS)
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
 	    -v $$(pwd)/.go/cache:/.cache                            \
-	    -v $$(pwd)/.go/pkg:/go/pkg                              \
+	    --env GOCACHE="/.cache/gocache"                         \
+	    --env GOMODCACHE="/.cache/gomodcache"                   \
 	    --env ARCH="$(ARCH)"                                    \
 	    --env OS="$(OS)"                                        \
 	    --env VERSION="$(VERSION)"                              \
