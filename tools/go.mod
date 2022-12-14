@@ -3,7 +3,7 @@ module github.com/thockin/go-build-template/tools
 go 1.19
 
 require (
-	github.com/estesp/manifest-tool/v2 v2.0.5
+	github.com/estesp/manifest-tool/v2 v2.0.6
 	github.com/golangci/golangci-lint v1.47.2
 	github.com/google/go-licenses v1.2.1
 )
@@ -32,7 +32,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/charithe/durationcheck v0.0.9 // indirect
 	github.com/chavacava/garif v0.0.0-20220316182200-5cad0b5181d4 // indirect
-	github.com/containerd/containerd v1.6.6 // indirect
+	github.com/containerd/containerd v1.6.8 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/daixiang0/gci v0.4.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -127,7 +127,7 @@ require (
 	github.com/nishanths/predeclared v0.2.2 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
+	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/otiai10/copy v1.6.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
