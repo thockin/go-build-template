@@ -212,40 +212,46 @@ shell: | $(BUILD_DIRS)
 LICENSES = .licenses
 
 $(LICENSES): | $(BUILD_DIRS)
-	docker run                              \
-	    -i                                  \
-	    --rm                                \
-	    -u $$(id -u):$$(id -g)              \
-	    -v $$(pwd)/tools:/src               \
-	    -w /src                             \
-	    -v $$(pwd)/bin/tools:/go/bin        \
-	    -v $$(pwd)/.go/cache:/.cache        \
-	    -v $$(pwd)/.go/pkg:/go/pkg          \
-	    --env CGO_ENABLED=0                 \
-	    --env HTTP_PROXY="$(HTTP_PROXY)"    \
-	    --env HTTPS_PROXY="$(HTTPS_PROXY)"  \
-	    $(BUILD_IMAGE)                      \
+	# Don't assume that `go` is available locally.
+	docker run                                 \
+	    -i                                     \
+	    --rm                                   \
+	    -u $$(id -u):$$(id -g)                 \
+	    -v $$(pwd)/tools:/src                  \
+	    -w /src                                \
+	    -v $$(pwd)/bin/tools:/go/bin           \
+	    -v $$(pwd)/.go/cache:/.cache           \
+	    --env GOCACHE="/.cache/gocache"        \
+	    --env GOMODCACHE="/.cache/gomodcache"  \
+	    --env CGO_ENABLED=0                    \
+	    --env HTTP_PROXY="$(HTTP_PROXY)"       \
+	    --env HTTPS_PROXY="$(HTTPS_PROXY)"     \
+	    $(BUILD_IMAGE)                         \
 	    go install github.com/google/go-licenses
-	rm -rf $(LICENSES) $(LICENSES).dir
-	mkdir $(LICENSES).dir
+	# The tool runs in a container because it execs `go`, which doesn't
+	# play nicely with CI.  The tool also wants its output dir to not
+	# exist, so we can't just volume mount $(LICENSES).
+	rm -rf $(LICENSES).tmp
+	mkdir $(LICENSES).tmp
 	docker run                              \
 	    -i                                  \
 	    --rm                                \
 	    -u $$(id -u):$$(id -g)              \
-	    -v $$(pwd)/$(LICENSES).dir:/output  \
+	    -v $$(pwd)/$(LICENSES).tmp:/output  \
 	    -v $$(pwd):/src                     \
 	    -w /src                             \
 	    -v $$(pwd)/bin/tools:/go/bin        \
 	    -v $$(pwd)/.go/cache:/.cache        \
 	    -v $$(pwd)/.go/pkg:/go/pkg          \
-	    --env CGO_ENABLED=0                 \
 	    --env HTTP_PROXY="$(HTTP_PROXY)"    \
 	    --env HTTPS_PROXY="$(HTTPS_PROXY)"  \
 	    $(BUILD_IMAGE)                      \
 	    go-licenses save ./... --save_path=/output/licenses
-	mv $(LICENSES).dir/licenses $(LICENSES)
-	rmdir $(LICENSES).dir
-	chmod -R a+rx $(LICENSES)
+	rm -rf $(LICENSES)
+	mv $(LICENSES).tmp/licenses $(LICENSES)
+	rmdir $(LICENSES).tmp
+	find $(LICENSES) -type d | xargs chmod 0755
+	find $(LICENSES) -type f | xargs chmod 0644
 
 CONTAINER_DOTFILES = $(foreach bin,$(BINS),.container-$(subst /,_,$(REGISTRY)/$(bin))-$(TAG))
 
@@ -307,19 +313,21 @@ push: container
 # This depends on github.com/estesp/manifest-tool.
 manifest-list: # @HELP builds a manifest list of containers for all platforms
 manifest-list: all-push
-	docker run                              \
-	    -i                                  \
-	    --rm                                \
-	    -u $$(id -u):$$(id -g)              \
-	    -v $$(pwd)/tools:/src               \
-	    -w /src                             \
-	    -v $$(pwd)/bin/tools:/go/bin        \
-	    -v $$(pwd)/.go/cache:/.cache        \
-	    -v $$(pwd)/.go/pkg:/go/pkg          \
-	    --env CGO_ENABLED=0                 \
-	    --env HTTP_PROXY="$(HTTP_PROXY)"    \
-	    --env HTTPS_PROXY="$(HTTPS_PROXY)"  \
-	    $(BUILD_IMAGE)                      \
+	# Don't assume that `go` is available locally.
+	docker run                                 \
+	    -i                                     \
+	    --rm                                   \
+	    -u $$(id -u):$$(id -g)                 \
+	    -v $$(pwd)/tools:/src                  \
+	    -w /src                                \
+	    -v $$(pwd)/bin/tools:/go/bin           \
+	    -v $$(pwd)/.go/cache:/.cache           \
+	    --env GOCACHE="/.cache/gocache"        \
+	    --env GOMODCACHE="/.cache/gomodcache"  \
+	    --env CGO_ENABLED=0                    \
+	    --env HTTP_PROXY="$(HTTP_PROXY)"       \
+	    --env HTTPS_PROXY="$(HTTPS_PROXY)"     \
+	    $(BUILD_IMAGE)                         \
 	    go install github.com/estesp/manifest-tool/v2/cmd/manifest-tool
 	for bin in $(BINS); do                                    \
 	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
