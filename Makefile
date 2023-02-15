@@ -60,7 +60,7 @@ ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 
 TAG := $(VERSION)__$(OS)_$(ARCH)
 
-GO_VERSION := 1.19
+GO_VERSION := 1.20
 BUILD_IMAGE := golang:$(GO_VERSION)-alpine
 
 BIN_EXTENSION :=
