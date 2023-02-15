@@ -1,3 +1,3 @@
 module github.com/thockin/go-build-template
 
-go 1.17
+go 1.20
