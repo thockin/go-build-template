@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/estesp/manifest-tool/v2 v2.0.8
 	github.com/golangci/golangci-lint v1.52.2
-	github.com/google/go-licenses v1.5.0
+	github.com/google/go-licenses v1.6.0
 )
 
 require (
