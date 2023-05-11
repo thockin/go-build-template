@@ -3,7 +3,7 @@ module github.com/thockin/go-build-template/tools
 go 1.20
 
 require (
-	github.com/estesp/manifest-tool/v2 v2.0.6
+	github.com/estesp/manifest-tool/v2 v2.0.8
 	github.com/golangci/golangci-lint v1.51.1
 	github.com/google/go-licenses v1.5.0
 )
@@ -40,10 +40,10 @@ require (
 	github.com/daixiang0/gci v0.9.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denis-tingaikin/go-header v0.4.3 // indirect
-	github.com/docker/cli v20.10.17+incompatible // indirect
+	github.com/docker/cli v23.0.1+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v20.10.24+incompatible // indirect
-	github.com/docker/docker-credential-helpers v0.6.4 // indirect
+	github.com/docker/docker v23.0.1+incompatible // indirect
+	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.1-0.20190612165340-fd1b1942c4d5 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
