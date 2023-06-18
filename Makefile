@@ -307,6 +307,11 @@ $(CONTAINER_DOTFILES): .buildx-initialized
 	docker images -q $(REGISTRY)/$(BIN):$(TAG) > $@
 	echo
 
+login: # @HELP configures docker to be authenticated to the defined registry
+	docker login $(REGISTRY)       \
+	    -u "$(REGISTRY_USERNAME)"  \
+	    -p "$(REGISTRY_PASSWORD)"
+
 push: # @HELP pushes the container for one platform ($OS/$ARCH) to the defined registry
 push: container
 	for bin in $(BINS); do                     \
