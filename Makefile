@@ -35,6 +35,10 @@ BASE_IMAGE ?= gcr.io/distroless/static
 # Where to push the docker images.
 REGISTRY ?= example.com
 
+# Credentials to access the registry.
+REGISTRY_USERNAME ?= oauth2accesstoken
+REGISTRY_PASSWORD ?= $$(gcloud auth print-access-token)
+
 # This version-strategy uses git tags to set the version string
 VERSION ?= $(shell git describe --tags --always --dirty)
 #
@@ -332,8 +336,8 @@ manifest-list: all-push
 	for bin in $(BINS); do                                    \
 	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
 	    bin/tools/manifest-tool                               \
-	        --username=oauth2accesstoken                      \
-	        --password=$$(gcloud auth print-access-token)     \
+	        --username="$(REGISTRY_USERNAME)"                 \
+	        --password="$(REGISTRY_PASSWORD)"                 \
 	        push from-args                                    \
 	        --platforms "$$platforms"                         \
 	        --template $(REGISTRY)/$$bin:$(VERSION)__OS_ARCH  \
