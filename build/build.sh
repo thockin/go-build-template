@@ -16,7 +16,6 @@
 
 set -o errexit
 set -o nounset
-set -o pipefail
 
 if [ -z "${OS:-}" ]; then
     echo "OS must be set"
@@ -36,7 +35,7 @@ export GOARCH="${ARCH}"
 export GOOS="${OS}"
 export GO111MODULE=on
 
-if [[ "${DEBUG:-}" == 1 ]]; then
+if [ "${DEBUG:-}" = 1 ]; then
     # Debugging - disable optimizations and inlining
     gogcflags="all=-N -l"
     goasmflags=""

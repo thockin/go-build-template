@@ -16,7 +16,6 @@
 
 set -o errexit
 set -o nounset
-set -o pipefail
 
 export CGO_ENABLED=0
 export GO111MODULE=on
@@ -25,7 +24,7 @@ cd tools >/dev/null
 go install github.com/golangci/golangci-lint/cmd/golangci-lint
 cd - >/dev/null
 
-echo -n "Running golangci-lint: "
+printf "Running golangci-lint: "
 ERRS=$(golangci-lint run "$@" 2>&1 || true)
 if [ -n "${ERRS}" ]; then
     echo "FAIL"
