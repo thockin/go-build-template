@@ -22,6 +22,9 @@ Makefile:
 Dockerfile.in:
    - maybe change or remove the `USER` if you need
 
+go.mod:
+   - change module name to the one you want to use
+
 ## Go Modules
 
 This assumes the use of go modules (which is the default for all Go builds
