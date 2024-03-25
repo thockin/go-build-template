@@ -322,7 +322,20 @@ push: container
 
 # This depends on github.com/estesp/manifest-tool.
 manifest-list: # @HELP builds a manifest list of containers for all platforms
-manifest-list: all-push
+manifest-list: all-push manifest-tool
+	for bin in $(BINS); do                                    \
+	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
+	    bin/tools/manifest-tool                               \
+	        --username="$(REGISTRY_USERNAME)"                 \
+	        --password="$(REGISTRY_PASSWORD)"                 \
+	        push from-args                                    \
+	        --platforms "$$platforms"                         \
+	        --template $(REGISTRY)/$$bin:$(VERSION)__OS_ARCH  \
+	        --target $(REGISTRY)/$$bin:$(VERSION);            \
+	done
+
+manifest-tool: # @HELP builds manifest-tool
+manifest-tool:
 	# Don't assume that `go` is available locally.
 	docker run                                 \
 	    -i                                     \
@@ -339,16 +352,6 @@ manifest-list: all-push
 	    --env HTTPS_PROXY="$(HTTPS_PROXY)"     \
 	    $(BUILD_IMAGE)                         \
 	    go install github.com/estesp/manifest-tool/v2/cmd/manifest-tool
-	for bin in $(BINS); do                                    \
-	    platforms=$$(echo $(ALL_PLATFORMS) | sed 's/ /,/g');  \
-	    bin/tools/manifest-tool                               \
-	        --username="$(REGISTRY_USERNAME)"                 \
-	        --password="$(REGISTRY_PASSWORD)"                 \
-	        push from-args                                    \
-	        --platforms "$$platforms"                         \
-	        --template $(REGISTRY)/$$bin:$(VERSION)__OS_ARCH  \
-	        --target $(REGISTRY)/$$bin:$(VERSION);            \
-	done
 
 version: # @HELP outputs the version string
 version:
