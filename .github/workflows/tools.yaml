@@ -1,4 +1,4 @@
-name: Run tools
+name: Build tools
 
 on: [ push, pull_request, workflow_dispatch ]
 
