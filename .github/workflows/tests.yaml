@@ -11,6 +11,6 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Test
       run: make test GOFLAGS="-v" GO_VERSION=${{ matrix.go-version }}

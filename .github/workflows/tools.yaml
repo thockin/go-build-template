@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Run go-licenses
       run: make .licenses GO_VERSION=${{ matrix.go-version }}
     - name: Build manifest-tool
