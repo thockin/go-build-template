@@ -64,7 +64,7 @@ ARCH := $(if $(GOARCH),$(GOARCH),$(shell GOTOOLCHAIN=local go env GOARCH))
 
 TAG := $(VERSION)__$(OS)_$(ARCH)
 
-GO_VERSION := 1.22
+GO_VERSION := 1.23
 BUILD_IMAGE := golang:$(GO_VERSION)-alpine
 
 BIN_EXTENSION :=
@@ -232,7 +232,7 @@ $(LICENSES): | $(BUILD_DIRS)
 	    --env HTTP_PROXY="$(HTTP_PROXY)"       \
 	    --env HTTPS_PROXY="$(HTTPS_PROXY)"     \
 	    $(BUILD_IMAGE)                         \
-	    go install github.com/google/go-licenses
+	    go install github.com/google/go-licenses/v2
 	# The tool runs in a container because it execs `go`, which doesn't
 	# play nicely with CI.  The tool also wants its output dir to not
 	# exist, so we can't just volume mount $(LICENSES).
