@@ -15,9 +15,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Generate registry name
+        id: gen-registry
+        run: echo "registry=ghcr.io/${REPOSITORY,,}" >> "${GITHUB_OUTPUT}"
+        env:
+          REPOSITORY: ${{ github.repository }}
+
       - name: Build and push Docker image
         run: make login manifest-list
         env:
-          REGISTRY: ghcr.io/${{ github.repository }}
+          REGISTRY: ${{ steps.gen-registry.outputs.registry }}
           REGISTRY_USERNAME: ${{ github.actor }}
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
