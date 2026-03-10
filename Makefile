@@ -59,12 +59,14 @@ MAKEFLAGS += --warn-undefined-variables
 .SUFFIXES:
 
 # Used internally.  Users should pass GOOS and/or GOARCH.
+GOOS ?=
+GOARCH ?=
 OS := $(if $(GOOS),$(GOOS),$(shell GOTOOLCHAIN=local go env GOOS))
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell GOTOOLCHAIN=local go env GOARCH))
 
 TAG := $(VERSION)__$(OS)_$(ARCH)
 
-GO_VERSION := 1.24
+GO_VERSION := 1.26
 BUILD_IMAGE := golang:$(GO_VERSION)-alpine
 
 BIN_EXTENSION :=

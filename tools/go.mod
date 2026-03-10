@@ -1,6 +1,6 @@
 module github.com/thockin/go-build-template/tools
 
-go 1.23.0
+go 1.24.1
 
 toolchain go1.24.1
 
