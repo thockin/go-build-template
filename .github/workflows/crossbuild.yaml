@@ -6,7 +6,7 @@ jobs:
   crossbuild:
     strategy:
       matrix:
-        go-version: [ "1.25", "1.26" ]
+        go-version: [ "1.26", "1.27" ]
         platform: [ "ubuntu-latest" ]
     runs-on: ${{ matrix.platform }}
     steps:
